@@ -67,15 +67,34 @@ Route::get('/gioi-thieu', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Danh mục & đặt lịch
+| Danh mục
 |--------------------------------------------------------------------------
 */
 
-Route::get('/category/{id}', [CategoryController::class,'show'])->name('category.show');
+Route::get('/category/{id}', [CategoryController::class,'show'])
+->name('category.show');
 
-Route::get('/booking/{facility}', [BookingController::class,'create'])->name('booking.create');
 
-Route::post('/booking/store', [BookingController::class,'store'])->name('booking.store');
+/*
+|--------------------------------------------------------------------------
+| Đặt lịch
+|--------------------------------------------------------------------------
+*/
+
+// Trang lịch đặt
+Route::get('/booking/{facility}',
+[BookingController::class,'create'])
+->name('booking.create');
+
+// Trang form đặt lịch (THÊM MỚI)
+Route::get('/booking/form/{facility}',
+[BookingController::class,'form'])
+->name('booking.form');
+
+// Lưu đặt lịch
+Route::post('/booking/store',
+[BookingController::class,'store'])
+->name('booking.store');
 
 
 /*
@@ -86,32 +105,64 @@ Route::post('/booking/store', [BookingController::class,'store'])->name('booking
 
 Route::middleware('auth')->prefix('admin')->group(function () {
 
-    Route::get('/', [AdminController::class,'dashboard'])->name('admin.dashboard');
+    Route::get('/', [AdminController::class,'dashboard'])
+    ->name('admin.dashboard');
+
 
     // Categories
-    Route::get('/categories', [CategoryController::class,'index'])->name('admin.categories');
-    Route::get('/categories/create', [CategoryController::class,'create'])->name('admin.categories.create');
-    Route::post('/categories/store', [CategoryController::class,'store'])->name('admin.categories.store');
-    Route::get('/categories/edit/{id}', [CategoryController::class,'edit'])->name('admin.categories.edit');
-    Route::post('/categories/update/{id}', [CategoryController::class,'update'])->name('admin.categories.update');
-    Route::get('/categories/delete/{id}', [CategoryController::class,'delete'])->name('admin.categories.delete');
+    Route::get('/categories', [CategoryController::class,'index'])
+    ->name('admin.categories');
+
+    Route::get('/categories/create', [CategoryController::class,'create'])
+    ->name('admin.categories.create');
+
+    Route::post('/categories/store', [CategoryController::class,'store'])
+    ->name('admin.categories.store');
+
+    Route::get('/categories/edit/{id}', [CategoryController::class,'edit'])
+    ->name('admin.categories.edit');
+
+    Route::post('/categories/update/{id}', [CategoryController::class,'update'])
+    ->name('admin.categories.update');
+
+    Route::get('/categories/delete/{id}', [CategoryController::class,'delete'])
+    ->name('admin.categories.delete');
+
 
     // Facilities
-    Route::get('/facilities', [FacilityController::class,'index'])->name('admin.facilities');
-    Route::get('/facilities/create', [FacilityController::class,'create'])->name('facilities.create');
-    Route::post('/facilities/store', [FacilityController::class,'store'])->name('facilities.store');
-    Route::get('/facilities/edit/{id}', [FacilityController::class,'edit'])->name('facilities.edit');
-    Route::post('/facilities/update/{id}', [FacilityController::class,'update'])->name('facilities.update');
-    Route::get('/facilities/delete/{id}', [FacilityController::class,'delete'])->name('facilities.delete');
+    Route::get('/facilities', [FacilityController::class,'index'])
+    ->name('admin.facilities');
+
+    Route::get('/facilities/create', [FacilityController::class,'create'])
+    ->name('facilities.create');
+
+    Route::post('/facilities/store', [FacilityController::class,'store'])
+    ->name('facilities.store');
+
+    Route::get('/facilities/edit/{id}', [FacilityController::class,'edit'])
+    ->name('facilities.edit');
+
+    Route::post('/facilities/update/{id}', [FacilityController::class,'update'])
+    ->name('facilities.update');
+
+    Route::get('/facilities/delete/{id}', [FacilityController::class,'delete'])
+    ->name('facilities.delete');
+
 
     // Users
-    Route::get('/users', [AdminController::class,'users'])->name('admin.users');
+    Route::get('/users', [AdminController::class,'users'])
+    ->name('admin.users');
+
 
     // Bookings
-    Route::get('/bookings', [AdminController::class,'bookings'])->name('admin.bookings');
+    Route::get('/bookings', [AdminController::class,'bookings'])
+    ->name('admin.bookings');
+
 
     // Stats
-    Route::get('/stats', [AdminController::class,'stats'])->name('admin.stats');
+    Route::get('/stats', [AdminController::class,'stats'])
+    ->name('admin.stats');
+
 });
 
 

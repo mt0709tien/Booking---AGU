@@ -15,10 +15,12 @@ class CategoryController extends Controller
 
         return view('category.show', compact('category'));
     }
+
+
     public function index()
     {
         $categories = Category::all();
-        return view('admin.categories',compact('categories'));
+        return view('admin.categories', compact('categories'));
     }
 
 
@@ -32,7 +34,9 @@ class CategoryController extends Controller
     {
         Category::create([
             'name' => $request->name,
-            'price' => $request->price
+            'price_morning' => $request->price_morning,
+            'price_afternoon' => $request->price_afternoon,
+            'price_evening' => $request->price_evening
         ]);
 
         return redirect()->route('admin.categories');
@@ -43,17 +47,19 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail($id);
 
-        return view('category.edit',compact('category'));
+        return view('category.edit', compact('category'));
     }
 
 
-    public function update(Request $request,$id)
+    public function update(Request $request, $id)
     {
         $category = Category::findOrFail($id);
 
         $category->update([
             'name' => $request->name,
-            'price' => $request->price
+            'price_morning' => $request->price_morning,
+            'price_afternoon' => $request->price_afternoon,
+            'price_evening' => $request->price_evening
         ]);
 
         return redirect()->route('admin.categories');

@@ -16,7 +16,9 @@
 <tr>
 <th>ID</th>
 <th>Tên danh mục</th>
-<th>Giá</th>
+<th>Giá sáng</th>
+<th>Giá chiều</th>
+<th>Giá tối</th>
 <th width="200">Hành động</th>
 </tr>
 </thead>
@@ -31,7 +33,11 @@
 
 <td>{{ $category->name }}</td>
 
-<td>{{ number_format($category->price) }} VNĐ</td>
+<td>{{ number_format($category->price_morning) }} VNĐ</td>
+
+<td>{{ number_format($category->price_afternoon) }} VNĐ</td>
+
+<td>{{ number_format($category->price_evening) }} VNĐ</td>
 
 <td>
 
