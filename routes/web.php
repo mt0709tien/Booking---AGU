@@ -18,7 +18,13 @@ use App\Http\Controllers\FacilityController;
 */
 
 Route::get('/', function () {
+
+    if (Auth::check() && Auth::user()->vai_tro == 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+
     return view('booking.home');
+
 })->name('booking.home');
 
 

@@ -14,17 +14,13 @@
 </div>
 @endif
 
-
 <div class="card shadow-sm">
-
 <div class="card-body">
-
 <div class="table-responsive">
 
 <table class="table table-bordered text-center align-middle">
 
 <thead class="table-light">
-
 <tr>
 <th>Thứ</th>
 <th>Ngày</th>
@@ -32,7 +28,6 @@
 <th>Chiều <br> (13h - 17h)</th>
 <th>Tối <br> (17h - 21h)</th>
 </tr>
-
 </thead>
 
 <tbody>
@@ -49,28 +44,48 @@
 {{ $day['date']->format('d-m-Y') }}
 </td>
 
-
 {{-- SÁNG --}}
 <td>
 
-@if($day['morning'])
+@if(Auth::check() && Auth::user()->vai_tro == 'admin')
 
-<span class="badge bg-danger px-3 py-2">
-Đã đặt
-</span>
+    {{-- ADMIN --}}
+    @if($day['morning'])
+
+        <span class="badge bg-dark px-3 py-2">
+            Đã khóa
+        </span>
+
+    @else
+
+        <button class="btn btn-warning">
+            Khóa sân
+        </button>
+
+    @endif
 
 @else
 
-<a
-href="{{ route('booking.form',[
-'facility'=>$facility->id,
-'date'=>$day['date']->format('Y-m-d'),
-'session'=>'morning'
-]) }}"
-class="btn btn-outline-success"
->
-Đặt
-</a>
+    {{-- USER --}}
+    @if($day['morning'])
+
+        <span class="badge bg-danger px-3 py-2">
+            Đã thuê
+        </span>
+
+    @else
+
+        <a
+        href="{{ route('booking.form',[
+        'facility'=>$facility->id,
+        'date'=>$day['date']->format('Y-m-d'),
+        'session'=>'morning'
+        ]) }}"
+        class="btn btn-outline-success">
+        Đặt
+        </a>
+
+    @endif
 
 @endif
 
@@ -84,24 +99,43 @@ class="btn btn-outline-success"
 {{-- CHIỀU --}}
 <td>
 
-@if($day['afternoon'])
+@if(Auth::check() && Auth::user()->vai_tro == 'admin')
 
-<span class="badge bg-danger px-3 py-2">
-Đã đặt
-</span>
+    @if($day['afternoon'])
+
+        <span class="badge bg-dark px-3 py-2">
+            Đã khóa
+        </span>
+
+    @else
+
+        <button class="btn btn-warning">
+            Khóa sân
+        </button>
+
+    @endif
 
 @else
 
-<a
-href="{{ route('booking.form',[
-'facility'=>$facility->id,
-'date'=>$day['date']->format('Y-m-d'),
-'session'=>'afternoon'
-]) }}"
-class="btn btn-outline-success"
->
-Đặt
-</a>
+    @if($day['afternoon'])
+
+        <span class="badge bg-danger px-3 py-2">
+            Đã thuê
+        </span>
+
+    @else
+
+        <a
+        href="{{ route('booking.form',[
+        'facility'=>$facility->id,
+        'date'=>$day['date']->format('Y-m-d'),
+        'session'=>'afternoon'
+        ]) }}"
+        class="btn btn-outline-success">
+        Đặt
+        </a>
+
+    @endif
 
 @endif
 
@@ -115,24 +149,43 @@ class="btn btn-outline-success"
 {{-- TỐI --}}
 <td>
 
-@if($day['evening'])
+@if(Auth::check() && Auth::user()->vai_tro == 'admin')
 
-<span class="badge bg-danger px-3 py-2">
-Đã đặt
-</span>
+    @if($day['evening'])
+
+        <span class="badge bg-dark px-3 py-2">
+            Đã khóa
+        </span>
+
+    @else
+
+        <button class="btn btn-warning">
+            Khóa sân
+        </button>
+
+    @endif
 
 @else
 
-<a
-href="{{ route('booking.form',[
-'facility'=>$facility->id,
-'date'=>$day['date']->format('Y-m-d'),
-'session'=>'evening'
-]) }}"
-class="btn btn-outline-success"
->
-Đặt
-</a>
+    @if($day['evening'])
+
+        <span class="badge bg-danger px-3 py-2">
+            Đã thuê
+        </span>
+
+    @else
+
+        <a
+        href="{{ route('booking.form',[
+        'facility'=>$facility->id,
+        'date'=>$day['date']->format('Y-m-d'),
+        'session'=>'evening'
+        ]) }}"
+        class="btn btn-outline-success">
+        Đặt
+        </a>
+
+    @endif
 
 @endif
 
@@ -151,9 +204,7 @@ class="btn btn-outline-success"
 </table>
 
 </div>
-
 </div>
-
 </div>
 
 </div>

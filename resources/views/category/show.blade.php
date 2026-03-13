@@ -8,61 +8,77 @@
 
 <div class="row g-4">
 
-    @foreach($category->facilities as $facility)
+@foreach($category->facilities as $facility)
 
-        <div class="col-md-4">
+<div class="col-md-4">
 
-            <div class="card shadow border-0 h-100">
+<div class="card shadow border-0 h-100">
 
-                <img 
+<img 
 src="{{ $facility->image ? asset('images/'.$facility->image) : 'https://via.placeholder.com/400x250' }}"
 class="card-img-top"
 style="height:220px; object-fit:cover;"
 >
 
-                <div class="card-body d-flex flex-column">
+<div class="card-body d-flex flex-column">
 
-                    <h5 class="fw-bold mb-2">
-                        {{ $facility->name }}
-                    </h5>
+<h5 class="fw-bold mb-2">
+{{ $facility->name }}
+</h5>
 
-                    <p class="text-muted small">
-                        {{ $facility->description }}
-                    </p>
+<p class="text-muted small">
+{{ $facility->description }}
+</p>
 
-                    <p class="fw-bold text-danger fs-5">
-                        {{ number_format($facility->category->price) }} VNĐ
-                    </p>
+{{-- Giá theo 3 buổi --}}
+<div class="mb-3">
 
-                    {{-- trạng thái sân --}}
-                    @if(($facility->bookings_count ?? 0) >= 14)
+<div class="text-success fw-bold">
+Sáng (7h - 11h):
+{{ number_format($facility->category->price_morning) }} VNĐ
+</div>
 
-                        <span class="badge bg-danger mb-3">
-                            Full tuần
-                        </span>
+<div class="text-warning fw-bold">
+Chiều (13h - 17h):
+{{ number_format($facility->category->price_afternoon) }} VNĐ
+</div>
 
-                    @else
+<div class="text-danger fw-bold">
+Tối (17h - 21h):
+{{ number_format($facility->category->price_evening) }} VNĐ
+</div>
 
-                        <span class="badge bg-success mb-3">
-                            Còn trống
-                        </span>
+</div>
 
-                    @endif
+{{-- trạng thái sân --}}
+@if(($facility->bookings_count ?? 0) >= 14)
 
-                    <a 
-                        href="{{ route('booking.create',$facility) }}"
-                        class="btn btn-primary mt-auto w-100"
-                    >
-                        Đặt ngay
-                    </a>
+<span class="badge bg-danger mb-3">
+Full tuần
+</span>
 
-                </div>
+@else
 
-            </div>
+<span class="badge bg-success mb-3">
+Còn trống
+</span>
 
-        </div>
+@endif
 
-    @endforeach
+<a 
+href="{{ route('booking.create',$facility) }}"
+class="btn btn-primary mt-auto w-100"
+>
+Đặt ngay
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+@endforeach
 
 </div>
 

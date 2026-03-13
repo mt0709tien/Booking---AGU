@@ -79,30 +79,46 @@ class BookingController extends Controller
 
     // Lưu dữ liệu đặt lịch
     public function store(Request $request)
-    {
+{
 
-       Booking::create([
+    $facility = Facility::find($request->facility_id);
 
-'user_id' => auth()->id(),
-
-'facility_id'=>$request->facility_id,
-
-'booking_date'=>$request->booking_date,
-
-'session'=>$request->session,
-
-'fullname'=>$request->fullname,
-
-'phone'=>$request->phone,
-
-'price'=>$request->price,
-
-'payment_method'=>$request->payment_method
-
-]);
-
-        return redirect()->route('booking.create',$request->facility_id)
-            ->with('success','Đặt lịch thành công!');
+    // Lấy giá theo buổi
+    if($request->session == 'morning'){
+        $price = $facility->category->price_morning;
     }
 
+    if($request->session == 'afternoon'){
+        $price = $facility->category->price_afternoon;
+    }
+
+    if($request->session == 'evening'){
+        $price = $facility->category->price_evening;
+    }
+
+
+    Booking::create([
+
+        'user_id' => auth()->id(),
+
+        'facility_id' => $request->facility_id,
+
+        'booking_date' => $request->booking_date,
+
+        'session' => $request->session,
+
+        'fullname' => $request->fullname,
+
+        'phone' => $request->phone,
+
+        'price' => $price,
+
+        'payment_method' => $request->payment_method
+
+    ]);
+
+
+    return redirect()->route('booking.create',$request->facility_id)
+        ->with('success','Đặt lịch thành công!');
+}
 }
