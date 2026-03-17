@@ -87,20 +87,58 @@ Route::get('/category/{id}', [CategoryController::class,'show'])
 |--------------------------------------------------------------------------
 */
 
-// Trang lịch đặt
+// Trang lịch
 Route::get('/booking/{facility}',
 [BookingController::class,'create'])
 ->name('booking.create');
 
-// Trang form đặt lịch (THÊM MỚI)
+// Form đặt
 Route::get('/booking/form/{facility}',
 [BookingController::class,'form'])
 ->name('booking.form');
 
-// Lưu đặt lịch
+// Lưu
 Route::post('/booking/store',
 [BookingController::class,'store'])
 ->name('booking.store');
+
+
+/*
+|--------------------------------------------------------------------------
+| 🔥 LỊCH CỦA TÔI (USER)
+|--------------------------------------------------------------------------
+*/
+
+// Xem lịch đã đặt
+Route::middleware('auth')->get('/my-bookings',
+[BookingController::class,'myBookings'])
+->name('booking.my');
+
+// Hủy lịch
+Route::middleware('auth')->get('/booking/cancel/{id}',
+[BookingController::class,'cancel'])
+->name('booking.cancel');
+
+
+/*
+|--------------------------------------------------------------------------
+| 🔔 NOTIFICATION
+|--------------------------------------------------------------------------
+*/
+
+// Click thông báo → đọc + chuyển link
+Route::middleware('auth')->get('/notification/read/{id}', function ($id) {
+
+    $noti = auth()->user()->notifications->find($id);
+
+    if ($noti) {
+        $noti->markAsRead();
+        return redirect($noti->data['link']);
+    }
+
+    return back();
+
+});
 
 
 /*
@@ -163,6 +201,16 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     // Bookings
     Route::get('/bookings', [AdminController::class,'bookings'])
     ->name('admin.bookings');
+
+
+    // 🔥 DUYỆT / TỪ CHỐI BOOKING
+    Route::get('/booking/approve/{id}',
+    [AdminController::class,'approve'])
+    ->name('admin.booking.approve');
+
+    Route::get('/booking/reject/{id}',
+    [AdminController::class,'reject'])
+    ->name('admin.booking.reject');
 
 
     // Stats

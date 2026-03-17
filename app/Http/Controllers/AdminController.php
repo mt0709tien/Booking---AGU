@@ -15,22 +15,17 @@ class AdminController extends Controller
         return view('admin.dashboard');
     }
 
-
     public function categories()
     {
         $categories = Category::all();
-
-        return view('admin.categories',compact('categories'));
+        return view('admin.categories', compact('categories'));
     }
-
 
     public function users()
     {
         $users = User::all();
-
-        return view('admin.users',compact('users'));
+        return view('admin.users', compact('users'));
     }
-
 
     public function sports()
     {
@@ -38,9 +33,8 @@ class AdminController extends Controller
             $q->where('name','like','%sân%');
         })->get();
 
-        return view('admin.sports',compact('sports'));
+        return view('admin.sports', compact('sports'));
     }
-
 
     public function rooms()
     {
@@ -48,9 +42,8 @@ class AdminController extends Controller
             $q->where('name','like','%phòng%');
         })->get();
 
-        return view('admin.rooms',compact('rooms'));
+        return view('admin.rooms', compact('rooms'));
     }
-
 
     public function hall()
     {
@@ -58,17 +51,14 @@ class AdminController extends Controller
             $q->where('name','like','%hội%');
         })->get();
 
-        return view('admin.hall',compact('halls'));
+        return view('admin.hall', compact('halls'));
     }
-
 
     public function bookings()
     {
         $bookings = Booking::with(['facility','user'])->latest()->get();
-
-        return view('admin.bookings',compact('bookings'));
+        return view('admin.bookings', compact('bookings'));
     }
-
 
     public function stats()
     {
@@ -76,11 +66,33 @@ class AdminController extends Controller
         $totalBookings = Booking::count();
         $totalFacilities = Facility::count();
 
-        return view('admin.stats',compact(
+        return view('admin.stats', compact(
             'totalUsers',
             'totalBookings',
             'totalFacilities'
         ));
+    }
+
+    // 🔥 THÊM 2 HÀM NÀY
+
+    public function approve($id)
+    {
+        $booking = Booking::findOrFail($id);
+
+        $booking->status = 'approved';
+        $booking->save();
+
+        return back()->with('success','Đã duyệt!');
+    }
+
+    public function reject($id)
+    {
+        $booking = Booking::findOrFail($id);
+
+        $booking->status = 'rejected';
+        $booking->save();
+
+        return back()->with('success','Đã từ chối!');
     }
 
 }

@@ -14,7 +14,6 @@
             margin:0;
         }
 
-        /* bỏ dấu chấm menu */
         .navbar-nav{
             list-style:none;
         }
@@ -27,7 +26,6 @@
             color:#ff4da6;
         }
 
-        /* navbar hồng pastel */
         .navbar-pink{
             background-color:#ffd6e7;
         }
@@ -41,16 +39,20 @@
 <!-- HEADER -->
 <div class="shadow sticky-top">
 
-<!-- PHẦN TRÊN (LOGO + TÊN + USER) -->
+<!-- TOP BAR -->
 <div style="background-color:#8FB9E6;">
 <div class="container d-flex justify-content-between align-items-center py-2">
 
-    <!-- BÊN TRÁI: LOGO + TÊN -->
+    <!-- LOGO -->
     <div class="d-flex align-items-center">
-        <img src="{{ asset('images/logo-agu.png') }}"
-             style="height:65px; margin-right:12px;">
+
+        <img 
+            src="{{ asset('images/logo-agu.png') }}"
+            style="height:65px; margin-right:12px;"
+        >
 
         <div class="lh-sm">
+
             <div style="font-size:18px; font-weight:700;">
                 TRƯỜNG ĐẠI HỌC AN GIANG
             </div>
@@ -58,13 +60,16 @@
             <div style="font-size:26px; font-weight:800; color:red;">
                 HỆ THỐNG QUẢN LÝ VÀ CHO THUÊ CƠ SỞ VẬT CHẤT
             </div>
+
         </div>
+
     </div>
 
-    <!-- BÊN PHẢI: USER -->
+    <!-- USER -->
     <div style="font-size:14px;">
 
         @auth
+
             <span class="me-2">
                 Xin chào, <strong>{{ Auth::user()->ho_ten }}</strong>
             </span>
@@ -75,12 +80,15 @@
                     Đăng xuất
                 </button>
             </form>
+
         @endauth
 
         @guest
+
             <a href="{{ route('login') }}" class="btn btn-sm btn-light">
                 Đăng nhập
             </a>
+
         @endguest
 
     </div>
@@ -95,7 +103,7 @@
 <div class="container">
 
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
-<span class="navbar-toggler-icon"></span>
+    <span class="navbar-toggler-icon"></span>
 </button>
 
 <div class="collapse navbar-collapse" id="navbarMain">
@@ -103,78 +111,144 @@
 <!-- MENU TRÁI -->
 <ul class="navbar-nav me-auto">
 
-<li class="nav-item">
-<a class="nav-link" href="{{ route('booking.home') }}">
-Trang chủ
-</a>
-</li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('booking.home') }}">
+            Trang chủ
+        </a>
+    </li>
 
-<li class="nav-item">
-<a class="nav-link" href="{{ route('gioithieu') }}">
-Giới thiệu
-</a>
-</li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('gioithieu') }}">
+            Giới thiệu
+        </a>
+    </li>
 
-<li class="nav-item dropdown">
+    <li class="nav-item dropdown">
 
-<a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-Danh mục
-</a>
+        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+            Danh mục
+        </a>
 
-<ul class="dropdown-menu">
+        <ul class="dropdown-menu">
 
-@foreach($categories as $category)
+            @foreach($categories as $category)
 
-<li>
-<a class="dropdown-item" href="{{ route('category.show',$category->id) }}">
-{{ $category->name }}
-</a>
-</li>
+                <li>
+                    <a class="dropdown-item" href="{{ route('category.show',$category->id) }}">
+                        {{ $category->name }}
+                    </a>
+                </li>
 
-@endforeach
+            @endforeach
 
-</ul>
+        </ul>
 
-</li>
+    </li>
 
 </ul>
 
 
 <!-- MENU PHẢI -->
-<ul class="navbar-nav">
+<ul class="navbar-nav align-items-center">
 
-@auth
+    @auth
 
-@if(Auth::user()->vai_tro === 'admin')
+        {{-- ✅ CHỈ USER MỚI THẤY --}}
+        @if(Auth::user()->vai_tro === 'user')
+            <li class="nav-item">
+                <a href="{{ route('booking.my') }}" class="nav-link">
+                    📋 Lịch của tôi
+                </a>
+            </li>
+        @endif
 
-<li class="nav-item">
-<a class="nav-link" href="{{ route('admin.dashboard') }}">
-Trang quản lý
-</a>
-</li>
+        <!-- CHUÔNG THÔNG BÁO -->
+        <li class="nav-item dropdown">
 
-@else
+            <button 
+                class="btn nav-link position-relative"
+                data-bs-toggle="dropdown"
+                style="border:none; background:none;"
+            >
+                🔔
 
-<li class="nav-item">
-<a class="nav-link" href="{{ route('booking.home') }}">
-Trang đặt lịch
-</a>
-</li>
+                @if(Auth::user()->unreadNotifications->count() > 0)
+                    <span 
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                        style="font-size:10px;"
+                    >
+                        {{ Auth::user()->unreadNotifications->count() }}
+                    </span>
+                @endif
+            </button>
 
-@endif
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="width:300px;">
 
-@endauth
+                <li class="p-2 border-bottom fw-bold">
+                    Thông báo
+                </li>
+
+                @forelse(Auth::user()->unreadNotifications as $notification)
+
+                    <li>
+                        <a 
+                            class="dropdown-item p-3"
+                            href="{{ url('/notification/read/'.$notification->id) }}"
+                        >
+                            <small class="fw-bold d-block">
+                                {{ $notification->data['title'] }}
+                            </small>
+
+                            <small class="text-muted">
+                                {{ $notification->data['message'] }}
+                            </small>
+                        </a>
+                    </li>
+
+                @empty
+
+                    <li class="p-3 text-center text-muted">
+                        Không có thông báo
+                    </li>
+
+                @endforelse
+
+            </ul>
+
+        </li>
 
 
-@guest
+        <!-- ADMIN / USER -->
+        @if(Auth::user()->vai_tro === 'admin')
 
-<li class="nav-item">
-<a class="nav-link" href="{{ route('login') }}">
-Đăng nhập
-</a>
-</li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin.dashboard') }}">
+                    ⚙️ Quản lý
+                </a>
+            </li>
 
-@endguest
+        @else
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('booking.home') }}">
+                    🛒 Đặt sân
+                </a>
+            </li>
+
+        @endif
+
+    @endauth
+
+
+    @guest
+
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('login') }}">
+                Đăng nhập
+            </a>
+        </li>
+
+    @endguest
 
 </ul>
 
@@ -189,7 +263,7 @@ Trang đặt lịch
 <!-- CONTENT -->
 <div class="container mt-4">
 
-@yield('content')
+    @yield('content')
 
 </div>
 
@@ -197,7 +271,7 @@ Trang đặt lịch
 <!-- FOOTER -->
 <footer class="bg-light text-center py-3 mt-5 border-top">
 
-© {{ date('Y') }} - Hệ thống quản lý cơ sở vật chất
+    © {{ date('Y') }} - Hệ thống quản lý cơ sở vật chất
 
 </footer>
 

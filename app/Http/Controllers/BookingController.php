@@ -10,65 +10,68 @@ use Carbon\Carbon;
 class BookingController extends Controller
 {
 
-    // Trang hiển thị lịch đặt
+    /*
+    |--------------------------------------------------------------------------
+    | Trang hiển thị lịch đặt
+    |--------------------------------------------------------------------------
+    */
     public function create(Facility $facility)
     {
         $weekDays = [];
 
         for ($i = 0; $i < 7; $i++) {
 
-            $date = Carbon::now()->startOfWeek()->addDays($i);
+            $date = Carbon::today()->addDays($i);
 
             $weekDays[] = [
 
                 'date' => $date,
 
-                // Ca sáng
-                'morning' => Booking::where('facility_id',$facility->id)
-                    ->where('booking_date',$date)
-                    ->where('session','morning')
+                'morning' => Booking::where('facility_id', $facility->id)
+                    ->whereDate('booking_date', $date)
+                    ->where('session', 'morning')
                     ->exists(),
 
-                // Ca chiều
-                'afternoon' => Booking::where('facility_id',$facility->id)
-                    ->where('booking_date',$date)
-                    ->where('session','afternoon')
+                'afternoon' => Booking::where('facility_id', $facility->id)
+                    ->whereDate('booking_date', $date)
+                    ->where('session', 'afternoon')
                     ->exists(),
 
-                // Ca tối
-                'evening' => Booking::where('facility_id',$facility->id)
-                    ->where('booking_date',$date)
-                    ->where('session','evening')
+                'evening' => Booking::where('facility_id', $facility->id)
+                    ->whereDate('booking_date', $date)
+                    ->where('session', 'evening')
                     ->exists(),
-
             ];
         }
 
-        return view('booking.create', compact('facility','weekDays'));
+        return view('booking.create', compact('facility', 'weekDays'));
     }
 
 
-    // Trang form nhập thông tin đặt
+    /*
+    |--------------------------------------------------------------------------
+    | Form đặt lịch
+    |--------------------------------------------------------------------------
+    */
     public function form(Request $request, Facility $facility)
     {
-
         $date = $request->date;
         $session = $request->session;
 
         // Lấy giá theo buổi
-        if($session == 'morning'){
+        if ($session == 'morning') {
             $price = $facility->category->price_morning;
         }
 
-        if($session == 'afternoon'){
+        if ($session == 'afternoon') {
             $price = $facility->category->price_afternoon;
         }
 
-        if($session == 'evening'){
+        if ($session == 'evening') {
             $price = $facility->category->price_evening;
         }
 
-        return view('booking.form',compact(
+        return view('booking.form', compact(
             'facility',
             'date',
             'session',
@@ -77,48 +80,79 @@ class BookingController extends Controller
     }
 
 
-    // Lưu dữ liệu đặt lịch
+    /*
+    |--------------------------------------------------------------------------
+    | Lưu đặt lịch
+    |--------------------------------------------------------------------------
+    */
     public function store(Request $request)
-{
+    {
+        $facility = Facility::find($request->facility_id);
 
-    $facility = Facility::find($request->facility_id);
+        // Lấy giá
+        if ($request->session == 'morning') {
+            $price = $facility->category->price_morning;
+        }
 
-    // Lấy giá theo buổi
-    if($request->session == 'morning'){
-        $price = $facility->category->price_morning;
+        if ($request->session == 'afternoon') {
+            $price = $facility->category->price_afternoon;
+        }
+
+        if ($request->session == 'evening') {
+            $price = $facility->category->price_evening;
+        }
+
+        Booking::create([
+
+            'user_id' => auth()->id(),
+            'facility_id' => $request->facility_id,
+            'booking_date' => $request->booking_date,
+            'session' => $request->session,
+            'fullname' => $request->fullname,
+            'phone' => $request->phone,
+            'price' => $price,
+            'payment_method' => $request->payment_method
+
+        ]);
+
+        return redirect()
+            ->route('booking.create', $request->facility_id)
+            ->with('success', 'Đặt lịch thành công!');
     }
 
-    if($request->session == 'afternoon'){
-        $price = $facility->category->price_afternoon;
+
+    /*
+    |--------------------------------------------------------------------------
+    | 🔥 LỊCH CỦA TÔI
+    |--------------------------------------------------------------------------
+    */
+    public function myBookings()
+    {
+        $bookings = Booking::where('user_id', auth()->id())
+            ->latest()
+            ->get();
+
+        return view('booking.my', compact('bookings'));
     }
 
-    if($request->session == 'evening'){
-        $price = $facility->category->price_evening;
+
+    /*
+    |--------------------------------------------------------------------------
+    | ❌ HỦY LỊCH
+    |--------------------------------------------------------------------------
+    */
+    public function cancel($id)
+    {
+        $booking = Booking::findOrFail($id);
+
+        // Chỉ cho phép chủ đơn hủy
+        if ($booking->user_id != auth()->id()) {
+            abort(403);
+        }
+
+        $booking->delete();
+
+        return back()->with('success', 'Đã hủy lịch thành công!');
     }
 
-
-    Booking::create([
-
-        'user_id' => auth()->id(),
-
-        'facility_id' => $request->facility_id,
-
-        'booking_date' => $request->booking_date,
-
-        'session' => $request->session,
-
-        'fullname' => $request->fullname,
-
-        'phone' => $request->phone,
-
-        'price' => $price,
-
-        'payment_method' => $request->payment_method
-
-    ]);
-
-
-    return redirect()->route('booking.create',$request->facility_id)
-        ->with('success','Đặt lịch thành công!');
-}
 }

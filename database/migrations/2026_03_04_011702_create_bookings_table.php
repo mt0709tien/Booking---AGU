@@ -11,32 +11,26 @@ public function up(): void
 {
 Schema::create('bookings', function (Blueprint $table) {
 
-$table->id();
+    $table->id();
 
-// User đặt lịch
-$table->foreignId('user_id')->constrained()->cascadeOnDelete();
+    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+    $table->foreignId('facility_id')->constrained()->cascadeOnDelete();
 
-// Cơ sở vật chất
-$table->foreignId('facility_id')->constrained()->cascadeOnDelete();
+    $table->date('booking_date');
 
-// Ngày đặt
-$table->date('booking_date');
+    $table->string('session'); // morning / afternoon / evening
 
-// Buổi
-$table->string('session'); // morning / afternoon / evening
+    $table->string('fullname');
+    $table->string('phone');
 
-// Thông tin người đặt
-$table->string('fullname');
-$table->string('phone');
+    $table->integer('price');
 
-// Giá
-$table->integer('price');
+    $table->string('payment_method');
 
-// Thanh toán
-$table->string('payment_method');
+    // 👉 THÊM DÒNG NÀY
+    $table->string('status')->default('pending');
 
-$table->timestamps();
-
+    $table->timestamps();
 });
 }
 

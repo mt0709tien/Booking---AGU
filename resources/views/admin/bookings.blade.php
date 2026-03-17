@@ -19,7 +19,9 @@
 <th>Ca</th>
 <th>Giá</th>
 <th>Thanh toán</th>
+<th>Trạng thái</th>
 <th>Thời gian đặt</th>
+<th>Hành động</th>
 </tr>
 </thead>
 
@@ -60,7 +62,40 @@ Tối (17h - 21h)
 
 <td>{{ $booking->payment_method }}</td>
 
+<!-- 🔥 TRẠNG THÁI -->
+<td>
+    @if($booking->status == 'pending')
+        <span class="badge bg-warning text-dark">Chờ duyệt</span>
+    @elseif($booking->status == 'approved')
+        <span class="badge bg-success">Đã duyệt</span>
+    @elseif($booking->status == 'rejected')
+        <span class="badge bg-danger">Từ chối</span>
+    @endif
+</td>
+
 <td>{{ $booking->created_at }}</td>
+
+<!-- 🔥 HÀNH ĐỘNG -->
+<td>
+
+    @if($booking->status == 'pending')
+
+        <a href="{{ route('admin.booking.approve',$booking->id) }}"
+           class="btn btn-success btn-sm">
+           ✔️ Duyệt
+        </a>
+
+        <a href="{{ route('admin.booking.reject',$booking->id) }}"
+           class="btn btn-danger btn-sm"
+           onclick="return confirm('Bạn có chắc muốn từ chối?')">
+           ❌ Từ chối
+        </a>
+
+    @else
+        <span class="text-muted">Đã xử lý</span>
+    @endif
+
+</td>
 
 </tr>
 
