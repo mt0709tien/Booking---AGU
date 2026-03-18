@@ -60,13 +60,18 @@
                             </td>
 
                             <td>
-                                @if($booking->status == 'pending')
-                                    <span class="badge bg-warning">Chờ duyệt</span>
-                                @elseif($booking->status == 'approved')
-                                    <span class="badge bg-success">Đã duyệt</span>
-                                @else
-                                    <span class="badge bg-danger">Bị từ chối</span>
-                                @endif
+                               @if($booking->status == 'pending')
+    <span class="badge bg-warning">Chờ duyệt</span>
+
+@elseif($booking->status == 'approved')
+    <span class="badge bg-success">Đã duyệt</span>
+
+@elseif($booking->status == 'cancelled')
+    <span class="badge bg-secondary">Đã hủy</span>
+
+@else
+    <span class="badge bg-danger">Bị từ chối</span>
+@endif
                             </td>
 
                             <td>

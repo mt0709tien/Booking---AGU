@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Facility;
 use App\Models\User;
@@ -73,8 +74,7 @@ class AdminController extends Controller
         ));
     }
 
-    // 🔥 THÊM 2 HÀM NÀY
-
+    // ================== DUYỆT ==================
     public function approve($id)
     {
         $booking = Booking::findOrFail($id);
@@ -85,6 +85,7 @@ class AdminController extends Controller
         return back()->with('success','Đã duyệt!');
     }
 
+    // ================== TỪ CHỐI ==================
     public function reject($id)
     {
         $booking = Booking::findOrFail($id);
@@ -95,4 +96,40 @@ class AdminController extends Controller
         return back()->with('success','Đã từ chối!');
     }
 
+    // ================== 🔥 KHÓA SÂN ==================
+   public function lock(Request $request)
+{
+    // ✅ validate dữ liệu
+    $request->validate([
+        'facility_id' => 'required',
+        'date' => 'required|date',
+        'session' => 'required'
+    ]);
+
+    // 🔥 kiểm tra slot đã tồn tại chưa (kể cả locked)
+    $exists = Booking::where('facility_id', $request->facility_id)
+        ->whereDate('booking_date', $request->date)
+        ->where('session', $request->session)
+        ->whereIn('status', ['pending', 'approved', 'locked']) // 🔥 FIX QUAN TRỌNG
+        ->exists();
+
+    if ($exists) {
+        return back()->with('error', 'Slot này đã có người đặt hoặc đã khóa!');
+    }
+
+    // 🔥 tạo bản ghi khóa
+    Booking::create([
+        'user_id' => null,
+        'facility_id' => $request->facility_id,
+        'booking_date' => $request->date,
+        'session' => $request->session,
+        'fullname' => 'ADMIN LOCK',
+        'phone' => '0000000000',
+        'price' => 0,
+        'payment_method' => 'admin',
+        'status' => 'locked'
+    ]);
+
+    return back()->with('success', 'Đã khóa sân!');
+}
 }

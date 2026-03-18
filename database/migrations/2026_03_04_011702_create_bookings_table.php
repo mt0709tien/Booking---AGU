@@ -7,36 +7,39 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
 
-public function up(): void
-{
-Schema::create('bookings', function (Blueprint $table) {
+    public function up(): void
+    {
+        Schema::create('bookings', function (Blueprint $table) {
 
-    $table->id();
+            $table->id();
 
-    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-    $table->foreignId('facility_id')->constrained()->cascadeOnDelete();
+            // ✅ CHO PHÉP NULL (QUAN TRỌNG)
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
 
-    $table->date('booking_date');
+            $table->foreignId('facility_id')->constrained()->cascadeOnDelete();
 
-    $table->string('session'); // morning / afternoon / evening
+            $table->date('booking_date');
 
-    $table->string('fullname');
-    $table->string('phone');
+            $table->string('session'); // morning / afternoon / evening
 
-    $table->integer('price');
+            $table->string('fullname');
+            $table->string('phone');
 
-    $table->string('payment_method');
+            $table->integer('price');
 
-    // 👉 THÊM DÒNG NÀY
-    $table->string('status')->default('pending');
+            $table->string('payment_method');
 
-    $table->timestamps();
-});
-}
+            // ✅ TRẠNG THÁI
+            $table->string('status')->default('pending');
+            // pending | approved | rejected | cancelled | locked
 
-public function down(): void
-{
-Schema::dropIfExists('bookings');
-}
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('bookings');
+    }
 
 };

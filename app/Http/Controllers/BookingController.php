@@ -30,16 +30,19 @@ class BookingController extends Controller
                 'morning' => Booking::where('facility_id', $facility->id)
                     ->whereDate('booking_date', $date)
                     ->where('session', 'morning')
+                    ->whereIn('status', ['pending', 'approved', 'locked']) // ✅ FIX
                     ->exists(),
 
                 'afternoon' => Booking::where('facility_id', $facility->id)
                     ->whereDate('booking_date', $date)
                     ->where('session', 'afternoon')
+                    ->whereIn('status', ['pending', 'approved', 'locked']) // ✅
                     ->exists(),
 
                 'evening' => Booking::where('facility_id', $facility->id)
                     ->whereDate('booking_date', $date)
                     ->where('session', 'evening')
+                    ->whereIn('status', ['pending', 'approved', 'locked']) // ✅
                     ->exists(),
             ];
         }
@@ -89,6 +92,17 @@ class BookingController extends Controller
     {
         $facility = Facility::find($request->facility_id);
 
+        // 🔥 CHẶN SLOT (QUAN TRỌNG)
+        $exists = Booking::where('facility_id', $request->facility_id)
+            ->whereDate('booking_date', $request->booking_date)
+            ->where('session', $request->session)
+            ->whereIn('status', ['pending', 'approved', 'locked']) // ✅ FIX
+            ->exists();
+
+        if ($exists) {
+            return back()->with('error', 'Khung giờ này đã được đặt hoặc bị khóa!');
+        }
+
         // Lấy giá
         if ($request->session == 'morning') {
             $price = $facility->category->price_morning;
@@ -103,7 +117,6 @@ class BookingController extends Controller
         }
 
         Booking::create([
-
             'user_id' => auth()->id(),
             'facility_id' => $request->facility_id,
             'booking_date' => $request->booking_date,
@@ -111,8 +124,8 @@ class BookingController extends Controller
             'fullname' => $request->fullname,
             'phone' => $request->phone,
             'price' => $price,
-            'payment_method' => $request->payment_method
-
+            'payment_method' => $request->payment_method,
+            'status' => 'pending' // ✅ thêm trạng thái
         ]);
 
         return redirect()
@@ -145,12 +158,13 @@ class BookingController extends Controller
     {
         $booking = Booking::findOrFail($id);
 
-        // Chỉ cho phép chủ đơn hủy
         if ($booking->user_id != auth()->id()) {
             abort(403);
         }
 
-        $booking->delete();
+        // ✅ chuyển trạng thái thay vì xóa
+        $booking->status = 'cancelled';
+        $booking->save();
 
         return back()->with('success', 'Đã hủy lịch thành công!');
     }

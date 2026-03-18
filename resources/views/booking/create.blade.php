@@ -44,12 +44,11 @@
 {{ $day['date']->format('d-m-Y') }}
 </td>
 
-{{-- SÁNG --}}
+{{-- ================= SÁNG ================= --}}
 <td>
 
 @if(Auth::check() && Auth::user()->vai_tro == 'admin')
 
-    {{-- ADMIN --}}
     @if($day['morning'])
 
         <span class="badge bg-dark px-3 py-2">
@@ -58,15 +57,21 @@
 
     @else
 
-        <button class="btn btn-warning">
-            Khóa sân
-        </button>
+        <form action="{{ route('admin.booking.lock') }}" method="POST">
+            @csrf
+            <input type="hidden" name="facility_id" value="{{ $facility->id }}">
+            <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
+            <input type="hidden" name="session" value="morning">
+
+            <button type="submit" class="btn btn-warning btn-sm">
+                Khóa sân
+            </button>
+        </form>
 
     @endif
 
 @else
 
-    {{-- USER --}}
     @if($day['morning'])
 
         <span class="badge bg-danger px-3 py-2">
@@ -96,7 +101,7 @@
 </td>
 
 
-{{-- CHIỀU --}}
+{{-- ================= CHIỀU ================= --}}
 <td>
 
 @if(Auth::check() && Auth::user()->vai_tro == 'admin')
@@ -109,9 +114,16 @@
 
     @else
 
-        <button class="btn btn-warning">
-            Khóa sân
-        </button>
+        <form action="{{ route('admin.booking.lock') }}" method="POST">
+            @csrf
+            <input type="hidden" name="facility_id" value="{{ $facility->id }}">
+            <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
+            <input type="hidden" name="session" value="afternoon">
+
+            <button type="submit" class="btn btn-warning btn-sm">
+                Khóa sân
+            </button>
+        </form>
 
     @endif
 
@@ -146,7 +158,7 @@
 </td>
 
 
-{{-- TỐI --}}
+{{-- ================= TỐI ================= --}}
 <td>
 
 @if(Auth::check() && Auth::user()->vai_tro == 'admin')
@@ -159,9 +171,16 @@
 
     @else
 
-        <button class="btn btn-warning">
-            Khóa sân
-        </button>
+        <form action="{{ route('admin.booking.lock') }}" method="POST">
+            @csrf
+            <input type="hidden" name="facility_id" value="{{ $facility->id }}">
+            <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
+            <input type="hidden" name="session" value="evening">
+
+            <button type="submit" class="btn btn-warning btn-sm">
+                Khóa sân
+            </button>
+        </form>
 
     @endif
 

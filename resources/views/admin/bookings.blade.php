@@ -44,18 +44,13 @@
 <td>{{ $booking->booking_date }}</td>
 
 <td>
-
-@if($booking->session == 'morning')
-Sáng (7h - 11h)
-
-@elseif($booking->session == 'afternoon')
-Chiều (13h - 17h)
-
-@elseif($booking->session == 'evening')
-Tối (17h - 21h)
-
-@endif
-
+    @if($booking->session == 'morning')
+        Sáng (7h - 11h)
+    @elseif($booking->session == 'afternoon')
+        Chiều (13h - 17h)
+    @elseif($booking->session == 'evening')
+        Tối (17h - 21h)
+    @endif
 </td>
 
 <td>{{ number_format($booking->price) }} VNĐ</td>
@@ -66,10 +61,15 @@ Tối (17h - 21h)
 <td>
     @if($booking->status == 'pending')
         <span class="badge bg-warning text-dark">Chờ duyệt</span>
+
     @elseif($booking->status == 'approved')
         <span class="badge bg-success">Đã duyệt</span>
+
     @elseif($booking->status == 'rejected')
         <span class="badge bg-danger">Từ chối</span>
+
+    @elseif($booking->status == 'cancelled')
+        <span class="badge bg-secondary">Đã hủy</span>
     @endif
 </td>
 

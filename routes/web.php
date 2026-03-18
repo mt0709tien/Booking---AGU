@@ -10,7 +10,6 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\FacilityController;
 
-
 /*
 |--------------------------------------------------------------------------
 | Trang chủ
@@ -115,7 +114,7 @@ Route::middleware('auth')->get('/my-bookings',
 ->name('booking.my');
 
 // Hủy lịch
-Route::middleware('auth')->get('/booking/cancel/{id}',
+Route::middleware('auth')->post('/booking/cancel/{id}',
 [BookingController::class,'cancel'])
 ->name('booking.cancel');
 
@@ -126,7 +125,6 @@ Route::middleware('auth')->get('/booking/cancel/{id}',
 |--------------------------------------------------------------------------
 */
 
-// Click thông báo → đọc + chuyển link
 Route::middleware('auth')->get('/notification/read/{id}', function ($id) {
 
     $noti = auth()->user()->notifications->find($id);
@@ -203,7 +201,7 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     ->name('admin.bookings');
 
 
-    // 🔥 DUYỆT / TỪ CHỐI BOOKING
+    // 🔥 DUYỆT / TỪ CHỐI
     Route::get('/booking/approve/{id}',
     [AdminController::class,'approve'])
     ->name('admin.booking.approve');
@@ -211,6 +209,12 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     Route::get('/booking/reject/{id}',
     [AdminController::class,'reject'])
     ->name('admin.booking.reject');
+
+
+    // 🔥 KHÓA SÂN (ĐÃ FIX)
+    Route::post('/booking/lock',
+    [AdminController::class,'lock'])
+    ->name('admin.booking.lock');
 
 
     // Stats
