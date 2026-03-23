@@ -10,16 +10,61 @@
         <p class="lead text-muted">
             Trường Đại học An Giang cung cấp nhiều loại cơ sở vật chất hiện đại 
             phục vụ cho việc học tập, tổ chức sự kiện và hoạt động thể thao.
-            Hệ thống được xây dựng nhằm giúp việc quản lý và đăng ký sử dụng
-            cơ sở vật chất trở nên dễ dàng, nhanh chóng và minh bạch.
         </p>
     </div>
 
+    <div class="row mb-5">
+    <div class="col-12">
+        <div class="card bg-light border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h4 class="fw-bold text-dark mb-4">
+                    <i class="fas fa-file-signature text-danger me-2"></i> Văn bản & Quy định tài chính
+                </h4>
+                <div class="row g-3">
+                    
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center p-3 bg-white rounded border shadow-sm h-100">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h6 class="mb-1 fw-bold small">Thông báo niêm yết giá cho thuê tài sản công (Trực tiếp)</h6>
+                                <p class="small text-muted mb-2">Số: 11/TB-ĐHAG</p>
+                                <a href="{{ asset('images/11-TB-DHAG Thong bao v-v niem yet gia cho thue tai san cong tai Truong DHAG theo hinh thuc cho thue truc tiep.pdf') }}" 
+                                   target="_blank" 
+                                   class="btn btn-sm btn-outline-danger fw-bold">
+                                    <i class="fas fa-eye me-1"></i> Xem chi tiết
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center p-3 bg-white rounded border shadow-sm h-100">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-file-pdf fa-2x text-primary"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h6 class="mb-1 fw-bold small">Thông báo giá thuê sân Bóng đá, Bóng chuyền, Bóng rổ</h6>
+                                <p class="small text-muted mb-2">Văn bản đã ký duyệt (.signed)</p>
+                                <a href="{{ asset('images/TB GIÁ THUÊ SÂN BÓNG ĐÁ, BÓNG CHUYỀN, BÓNG RỔ.signed_0.pdf') }}" 
+                                   target="_blank" 
+                                   class="btn btn-sm btn-outline-primary fw-bold">
+                                    <i class="fas fa-eye me-1"></i> Xem chi tiết
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- Hội trường -->
     <div class="row align-items-center mb-5">
         <div class="col-md-6">
-            <img src="https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04"
+            <img src="images/HT.jpg"
                  class="img-fluid rounded shadow">
         </div>
 
@@ -57,7 +102,7 @@
         </div>
 
         <div class="col-md-6">
-            <img src="https://images.unsplash.com/photo-1580582932707-520aed937b7b"
+            <img src="images/PM.jpg"
                  class="img-fluid rounded shadow">
         </div>
 
@@ -68,7 +113,7 @@
     <div class="row align-items-center mb-5">
 
         <div class="col-md-6">
-            <img src="https://images.unsplash.com/photo-1505842465776-3d90f6163100"
+            <img src="images/TT.jpg"
                  class="img-fluid rounded shadow">
         </div>
 
@@ -88,76 +133,9 @@
         </div>
 
     </div>
+    <hr class="my-5">
 
 
-    <!-- Sân tổ chức sự kiện -->
-    <div class="row align-items-center mb-5">
-
-        <div class="col-md-6">
-            <h3 class="text-danger fw-bold">Sân tổ chức sự kiện</h3>
-            <p>
-                Khu vực sân bãi rộng rãi phù hợp tổ chức các chương trình
-                văn nghệ, hội chợ, hoạt động ngoại khóa và sự kiện lớn.
-            </p>
-
-            <ul>
-                <li>Không gian rộng</li>
-                <li>Phù hợp tổ chức sự kiện ngoài trời</li>
-                <li>Đáp ứng nhu cầu thuê tổ chức chương trình</li>
-            </ul>
-        </div>
-
-        <div class="col-md-6">
-            <img src="https://images.unsplash.com/photo-1511578314322-379afb476865"
-                 class="img-fluid rounded shadow">
-        </div>
-
-    </div>
-
-
-    <!-- Công nghệ -->
-    <div class="text-center mt-5">
-        <h4 class="fw-bold">Công nghệ sử dụng trong hệ thống</h4>
-        <p class="text-muted">
-            Website được xây dựng nhằm hỗ trợ quản lý và đăng ký thuê cơ sở vật chất trực tuyến.
-        </p>
-
-        <div class="row mt-4">
-
-            <div class="col-md-3">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h5>Laravel</h5>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h5>MySQL</h5>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h5>Bootstrap 5</h5>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h5>XAMPP</h5>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
 
 </div>
 

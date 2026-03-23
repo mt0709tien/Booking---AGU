@@ -277,6 +277,21 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 
+<script>
+    const echo = new Echo({
+        broadcaster: 'pusher',
+        key: 'd2ede6aab99762078bbc', // 👈 SỬA DÒNG NÀY
+        cluster: 'mt1',
+        forceTLS: true
+    });
+
+    echo.channel('booking-channel')
+        .listen('BookingNotification', (e) => {
+            alert(e.message);
+            location.reload();
+        });
+</script>
 </body>
 </html>

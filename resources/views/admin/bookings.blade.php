@@ -33,7 +33,21 @@
 
 <td>{{ $booking->id }}</td>
 
-<td>{{ $booking->user->ho_ten }}</td>
+<td>
+    @if($booking->user)
+        {{ $booking->user->ho_ten }}
+
+        @if($booking->user->vai_tro == 'admin')
+            <span class="badge bg-danger">Admin</span>
+        @else
+            <span class="badge bg-success">User</span>
+        @endif
+
+    @else
+        Khách
+        <span class="badge bg-secondary">Guest</span>
+    @endif
+</td>
 
 <td>{{ $booking->fullname }}</td>
 
@@ -57,13 +71,16 @@
 
 <td>{{ $booking->payment_method }}</td>
 
-<!-- 🔥 TRẠNG THÁI -->
+<!-- 🔥 trạng thái -->
 <td>
     @if($booking->status == 'pending')
         <span class="badge bg-warning text-dark">Chờ duyệt</span>
 
     @elseif($booking->status == 'approved')
         <span class="badge bg-success">Đã duyệt</span>
+
+    @elseif($booking->status == 'locked')
+        <span class="badge bg-dark">Đã khóa</span>
 
     @elseif($booking->status == 'rejected')
         <span class="badge bg-danger">Từ chối</span>
@@ -72,13 +89,13 @@
         <span class="badge bg-secondary">Đã hủy</span>
     @endif
 </td>
-
-<td>{{ $booking->created_at }}</td>
-
 <!-- 🔥 HÀNH ĐỘNG -->
 <td>
 
-    @if($booking->status == 'pending')
+    @if(
+        $booking->status == 'pending' &&
+        !($booking->user && $booking->user->vai_tro == 'admin')
+    )
 
         <a href="{{ route('admin.booking.approve',$booking->id) }}"
            class="btn btn-success btn-sm">

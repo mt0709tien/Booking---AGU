@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Facility;
 use App\Models\User;
 use App\Models\Booking;
+use App\Notifications\BookingNotification;
 
 class AdminController extends Controller
 {
@@ -82,6 +83,15 @@ class AdminController extends Controller
         $booking->status = 'approved';
         $booking->save();
 
+        // 🔔 GỬI THÔNG BÁO CHO USER (NẾU CÓ)
+        if ($booking->user) {
+            $booking->user->notify(new BookingNotification(
+                'Đã duyệt',
+                'Đơn đặt của bạn đã được duyệt!',
+                route('booking.my')
+            ));
+        }
+
         return back()->with('success','Đã duyệt!');
     }
 
@@ -93,43 +103,49 @@ class AdminController extends Controller
         $booking->status = 'rejected';
         $booking->save();
 
+        // 🔔 GỬI THÔNG BÁO CHO USER (NẾU CÓ)
+        if ($booking->user) {
+            $booking->user->notify(new BookingNotification(
+                'Từ chối',
+                'Đơn đặt của bạn đã bị từ chối!',
+                route('booking.my')
+            ));
+        }
+
         return back()->with('success','Đã từ chối!');
     }
 
     // ================== 🔥 KHÓA SÂN ==================
-   public function lock(Request $request)
-{
-    // ✅ validate dữ liệu
-    $request->validate([
-        'facility_id' => 'required',
-        'date' => 'required|date',
-        'session' => 'required'
-    ]);
+    public function lock(Request $request)
+    {
+        $request->validate([
+            'facility_id' => 'required',
+            'date' => 'required|date',
+            'session' => 'required'
+        ]);
 
-    // 🔥 kiểm tra slot đã tồn tại chưa (kể cả locked)
-    $exists = Booking::where('facility_id', $request->facility_id)
-        ->whereDate('booking_date', $request->date)
-        ->where('session', $request->session)
-        ->whereIn('status', ['pending', 'approved', 'locked']) // 🔥 FIX QUAN TRỌNG
-        ->exists();
+        $exists = Booking::where('facility_id', $request->facility_id)
+            ->whereDate('booking_date', $request->date)
+            ->where('session', $request->session)
+            ->whereIn('status', ['pending', 'approved', 'locked'])
+            ->exists();
 
-    if ($exists) {
-        return back()->with('error', 'Slot này đã có người đặt hoặc đã khóa!');
+        if ($exists) {
+            return back()->with('error', 'Slot này đã có người đặt hoặc đã khóa!');
+        }
+
+        Booking::create([
+            'user_id' => null,
+            'facility_id' => $request->facility_id,
+            'booking_date' => $request->date,
+            'session' => $request->session,
+            'fullname' => 'ADMIN LOCK',
+            'phone' => '0000000000',
+            'price' => 0,
+            'payment_method' => 'admin',
+            'status' => 'locked'
+        ]);
+
+        return back()->with('success', 'Đã khóa sân!');
     }
-
-    // 🔥 tạo bản ghi khóa
-    Booking::create([
-        'user_id' => null,
-        'facility_id' => $request->facility_id,
-        'booking_date' => $request->date,
-        'session' => $request->session,
-        'fullname' => 'ADMIN LOCK',
-        'phone' => '0000000000',
-        'price' => 0,
-        'payment_method' => 'admin',
-        'status' => 'locked'
-    ]);
-
-    return back()->with('success', 'Đã khóa sân!');
-}
 }

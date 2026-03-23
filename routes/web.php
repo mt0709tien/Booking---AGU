@@ -96,6 +96,14 @@ Route::get('/booking/form/{facility}',
 [BookingController::class,'form'])
 ->name('booking.form');
 
+// Form đặt nhiều ca (POST từ checkbox trên bảng lịch)
+Route::post('/booking/form-multiple', [BookingController::class,'formMultiple'])
+    ->name('booking.form.multiple');
+
+// Lưu nhiều booking
+Route::post('/booking/store-multiple', [BookingController::class,'storeMultiple'])
+    ->name('booking.store.multiple');
+
 // Lưu
 Route::post('/booking/store',
 [BookingController::class,'store'])
@@ -145,8 +153,7 @@ Route::middleware('auth')->get('/notification/read/{id}', function ($id) {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->prefix('admin')->group(function () {
-
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/', [AdminController::class,'dashboard'])
     ->name('admin.dashboard');
 
@@ -231,3 +238,9 @@ Route::middleware('auth')->prefix('admin')->group(function () {
 */
 
 Route::resource('users', UserController::class);
+
+use App\Http\Controllers\StatsController;
+
+// Khi bạn vào tên-miền.com/stats, nó sẽ gọi hàm index trong StatsController
+Route::get('/admin/stats', [StatsController::class, 'index'])->name('admin.stats');
+
