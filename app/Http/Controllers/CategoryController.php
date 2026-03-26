@@ -7,29 +7,28 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function show($id)
+    // Hiển thị danh sách + tìm kiếm
+    public function index(Request $request)
     {
-        $category = Category::with(['facilities' => function ($q) {
-            $q->withCount('bookings');
-        }])->findOrFail($id);
+        $query = Category::query();
 
-        return view('category.show', compact('category'));
-    }
+        // Tìm kiếm theo tên
+        if ($request->keyword) {
+            $query->where('name', 'like', '%' . $request->keyword . '%');
+        }
 
+        $categories = $query->paginate(10);
 
-    public function index()
-    {
-        $categories = Category::all();
         return view('admin.categories', compact('categories'));
     }
 
-
+    // Hiển thị form thêm
     public function create()
     {
-        return view('category.create');
+        return view('category.create'); // hoặc admin.categories.create
     }
 
-
+    // Lưu dữ liệu
     public function store(Request $request)
     {
         Category::create([
@@ -39,10 +38,21 @@ class CategoryController extends Controller
             'price_evening' => $request->price_evening
         ]);
 
-        return redirect()->route('admin.categories');
+        return redirect()->route('admin.categories')
+                         ->with('success', 'Thêm danh mục thành công');
     }
 
+    // Hiển thị chi tiết
+    public function show($id)
+    {
+        $category = Category::with(['facilities' => function ($q) {
+            $q->withCount('bookings');
+        }])->findOrFail($id);
 
+        return view('category.show', compact('category'));
+    }
+
+    // Hiển thị form sửa
     public function edit($id)
     {
         $category = Category::findOrFail($id);
@@ -50,7 +60,7 @@ class CategoryController extends Controller
         return view('category.edit', compact('category'));
     }
 
-
+    // Cập nhật dữ liệu
     public function update(Request $request, $id)
     {
         $category = Category::findOrFail($id);
@@ -62,14 +72,16 @@ class CategoryController extends Controller
             'price_evening' => $request->price_evening
         ]);
 
-        return redirect()->route('admin.categories');
+        return redirect()->route('admin.categories.index')
+                         ->with('success', 'Cập nhật thành công');
     }
 
-
-    public function delete($id)
+    // Xóa dữ liệu
+    public function destroy($id)
     {
         Category::findOrFail($id)->delete();
 
-        return redirect()->route('admin.categories');
+        return redirect()->route('admin.categories')
+                         ->with('success', 'Xóa thành công');
     }
 }

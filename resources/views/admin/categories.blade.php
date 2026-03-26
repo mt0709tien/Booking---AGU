@@ -10,6 +10,25 @@
 + Thêm danh mục
 </a>
 
+<form method="GET" action="{{ route('admin.categories') }}" class="mb-3">
+    <div class="row">
+        <div class="col-md-4">
+            <input type="text"
+                   name="keyword"
+                   class="form-control"
+                   placeholder="Tìm tên danh mục..."
+                   value="{{ request('keyword') }}">
+        </div>
+
+        <div class="col-md-2">
+            <button class="btn btn-primary">Tìm kiếm</button>
+            <a href="{{ route('admin.categories') }}" class="btn btn-secondary">
+                Reset
+            </a>
+        </div>
+    </div>
+</form>
+
 <table class="table table-bordered table-striped">
 
 <thead>

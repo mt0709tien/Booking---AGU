@@ -10,36 +10,92 @@ use Carbon\Carbon;
 
 class StatsController extends Controller
 {
-    public function index()
-    {
-        // 1. Tổng quan
-        $totalUsers = User::count();
-        $totalBookings = Booking::count();
-        $totalFacilities = Facility::count();
+   public function index(Request $request)
+{
+    $totalUsers = User::count();
+    $totalBookings = Booking::count();
+    $totalFacilities = Facility::count();
 
-        // 2. 🔥 Doanh thu 7 ngày gần nhất
-        $revenueData = [];
-        $dayLabels = [];
+    $filter = $request->filter ?? '7days';
 
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
+    $revenueData = [];
+    $dayLabels = [];
 
-            // Label dạng: 17/03
-            $dayLabels[] = $date->format('d/m');
+    // 🔥 DATE RANGE (ưu tiên cao nhất)
+    if ($request->from && $request->to) {
 
-            $dailySum = Booking::whereDate('booking_date', $date->toDateString())
+        $start = Carbon::parse($request->from);
+        $end = Carbon::parse($request->to);
+
+        while ($start <= $end) {
+            $dayLabels[] = $start->format('d/m');
+
+            $revenueData[] = Booking::whereDate('booking_date', $start)
                 ->where('status', 'approved')
                 ->sum('price');
 
-            $revenueData[] = $dailySum;
+            $start->addDay();
         }
-
-        return view('admin.stats', compact(
-            'totalUsers',
-            'totalBookings',
-            'totalFacilities',
-            'revenueData',
-            'dayLabels'
-        ));
     }
+
+    // 🔥 HÔM NAY
+    elseif ($filter == 'today') {
+        $today = Carbon::today();
+
+        $dayLabels[] = $today->format('d/m');
+
+        $revenueData[] = Booking::whereDate('booking_date', $today)
+            ->where('status', 'approved')
+            ->sum('price');
+    }
+
+    // 🔥 THÁNG
+    elseif ($filter == 'month') {
+        $now = Carbon::now();
+
+        for ($i = 1; $i <= $now->daysInMonth; $i++) {
+            $date = Carbon::create($now->year, $now->month, $i);
+
+            $dayLabels[] = $date->format('d');
+
+            $revenueData[] = Booking::whereDate('booking_date', $date)
+                ->where('status', 'approved')
+                ->sum('price');
+        }
+    }
+
+    // 🔥 NĂM
+    elseif ($filter == 'year') {
+        for ($i = 1; $i <= 12; $i++) {
+            $dayLabels[] = 'Tháng ' . $i;
+
+            $revenueData[] = Booking::whereMonth('booking_date', $i)
+                ->whereYear('booking_date', now()->year)
+                ->where('status', 'approved')
+                ->sum('price');
+        }
+    }
+
+    // 🔥 7 NGÀY
+    else {
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+
+            $dayLabels[] = $date->format('d/m');
+
+            $revenueData[] = Booking::whereDate('booking_date', $date)
+                ->where('status', 'approved')
+                ->sum('price');
+        }
+    }
+
+    return view('admin.stats', compact(
+        'totalUsers',
+        'totalBookings',
+        'totalFacilities',
+        'revenueData',
+        'dayLabels',
+        'filter'
+    ));
+}
 }

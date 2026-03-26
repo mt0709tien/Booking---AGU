@@ -37,12 +37,11 @@
     @if($booking->user)
         {{ $booking->user->ho_ten }}
 
-        @if($booking->user->vai_tro == 'admin')
+        @if(strtolower($booking->user->vai_tro) == 'admin')
             <span class="badge bg-danger">Admin</span>
         @else
             <span class="badge bg-success">User</span>
         @endif
-
     @else
         Khách
         <span class="badge bg-secondary">Guest</span>
@@ -50,12 +49,13 @@
 </td>
 
 <td>{{ $booking->fullname }}</td>
-
 <td>{{ $booking->phone }}</td>
 
-<td>{{ $booking->facility->name }}</td>
+<td>{{ $booking->facility->name ?? 'Không có' }}</td>
 
-<td>{{ $booking->booking_date }}</td>
+<td>
+    {{ \Carbon\Carbon::parse($booking->booking_date)->format('d/m/Y') }}
+</td>
 
 <td>
     @if($booking->session == 'morning')
@@ -64,53 +64,143 @@
         Chiều (13h - 17h)
     @elseif($booking->session == 'evening')
         Tối (17h - 21h)
+    @else
+        Không xác định
     @endif
 </td>
 
 <td>{{ number_format($booking->price) }} VNĐ</td>
 
-<td>{{ $booking->payment_method }}</td>
-
-<!-- 🔥 trạng thái -->
+<!-- 🔥 THANH TOÁN -->
 <td>
-    @if($booking->status == 'pending')
+
+    {{-- 💵 TIỀN MẶT --}}
+    @if($booking->payment_method == 'Tiền mặt')
+        <span class="badge bg-secondary">
+            💵 Tiền mặt
+        </span>
+
+    {{-- 💳 CHUYỂN KHOẢN --}}
+    @elseif($booking->payment_method == 'Chuyển khoản')
+
+        @if($booking->status == 'pending')
+            <span class="badge bg-warning text-dark">
+                ⏳ Chờ chuyển khoản
+            </span>
+
+        @elseif($booking->status == 'approved')
+            <span class="badge bg-success">
+                💳 Đã chuyển khoản
+            </span>
+
+        @elseif($booking->status == 'rejected')
+            <span class="badge bg-danger">
+                ❌ Chuyển khoản lỗi
+            </span>
+
+        @else
+            <span class="badge bg-light text-dark">
+                Chuyển khoản
+            </span>
+        @endif
+
+    {{-- 🔒 ADMIN KHÓA --}}
+    @elseif($booking->payment_method == 'admin_lock')
+        <span class="badge bg-dark">
+            🔒 Admin khóa
+        </span>
+
+    @else
+        <span class="badge bg-light text-dark">
+            Khác
+        </span>
+    @endif
+
+</td>
+
+<!-- 🔥 TRẠNG THÁI -->
+<td>
+    @if($booking->status == 'locked')
+        <span class="badge bg-dark">Đã khóa</span>
+
+    @elseif($booking->status == 'pending')
         <span class="badge bg-warning text-dark">Chờ duyệt</span>
 
     @elseif($booking->status == 'approved')
         <span class="badge bg-success">Đã duyệt</span>
-
-    @elseif($booking->status == 'locked')
-        <span class="badge bg-dark">Đã khóa</span>
 
     @elseif($booking->status == 'rejected')
         <span class="badge bg-danger">Từ chối</span>
 
     @elseif($booking->status == 'cancelled')
         <span class="badge bg-secondary">Đã hủy</span>
+
+    @else
+        <span class="badge bg-light text-dark">Không rõ</span>
     @endif
 </td>
+
+<!-- 🔥 THỜI GIAN -->
+<td>
+    {{ $booking->created_at ? $booking->created_at->format('H:i d/m/Y') : '' }}
+</td>
+
 <!-- 🔥 HÀNH ĐỘNG -->
 <td>
 
-    @if(
-        $booking->status == 'pending' &&
-        !($booking->user && $booking->user->vai_tro == 'admin')
-    )
+@php
+    $isAdmin = $booking->user && strtolower($booking->user->vai_tro) == 'admin';
+@endphp
 
-        <a href="{{ route('admin.booking.approve',$booking->id) }}"
-           class="btn btn-success btn-sm">
-           ✔️ Duyệt
-        </a>
+{{-- ⚠️ CẢNH BÁO CHUYỂN KHOẢN --}}
+@if($booking->payment_method == 'Chuyển khoản' && $booking->status == 'pending')
+    <div class="mb-1">
+        <span class="badge bg-danger">
+            ⚠️ Chưa xác nhận chuyển khoản
+        </span>
+    </div>
+@endif
 
-        <a href="{{ route('admin.booking.reject',$booking->id) }}"
-           class="btn btn-danger btn-sm"
-           onclick="return confirm('Bạn có chắc muốn từ chối?')">
-           ❌ Từ chối
-        </a>
+{{-- ✅ USER đặt --}}
+@if($booking->status == 'pending' && !$isAdmin)
 
-    @else
-        <span class="text-muted">Đã xử lý</span>
-    @endif
+    <a href="{{ route('admin.booking.approve',$booking->id) }}"
+       class="btn btn-success btn-sm">
+       ✔️ Duyệt
+    </a>
+
+    <a href="{{ route('admin.booking.reject',$booking->id) }}"
+       class="btn btn-danger btn-sm"
+       onclick="return confirm('Bạn có chắc muốn từ chối?')">
+       ❌ Từ chối
+    </a>
+
+{{-- 🔒 ADMIN KHÓA --}}
+@elseif($booking->status == 'locked')
+
+    <form action="{{ route('admin.booking.unlock') }}" method="POST" style="display:inline;">
+        @csrf
+        <input type="hidden" name="facility_id" value="{{ $booking->facility_id }}">
+        <input type="hidden" name="date" value="{{ $booking->booking_date }}">
+        <input type="hidden" name="session" value="{{ $booking->session }}">
+
+        <button class="btn btn-dark btn-sm"
+            onclick="return confirm('Mở khóa ca này?')">
+            🔓 Mở khóa
+        </button>
+    </form>
+
+{{-- 👑 ADMIN TẠO --}}
+@elseif($isAdmin)
+
+    <span class="text-primary fw-bold">Admin tạo</span>
+
+{{-- ✔️ KHÁC --}}
+@else
+
+    <span class="text-muted">Đã xử lý</span>
+
+@endif
 
 </td>
 

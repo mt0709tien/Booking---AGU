@@ -8,6 +8,7 @@ use App\Models\Facility;
 use App\Models\User;
 use App\Models\Booking;
 use App\Notifications\BookingNotification;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -116,36 +117,58 @@ class AdminController extends Controller
     }
 
     // ================== 🔥 KHÓA SÂN ==================
-    public function lock(Request $request)
-    {
-        $request->validate([
-            'facility_id' => 'required',
-            'date' => 'required|date',
-            'session' => 'required'
-        ]);
+   public function lock(Request $request)
+{
+    // 🔥 XÓA TOÀN BỘ SLOT CŨ (QUAN TRỌNG NHẤT)
+    Booking::where('facility_id', $request->facility_id)
+        ->whereDate('booking_date', $request->date)
+        ->where('session', $request->session)
+        ->delete();
 
-        $exists = Booking::where('facility_id', $request->facility_id)
-            ->whereDate('booking_date', $request->date)
-            ->where('session', $request->session)
-            ->whereIn('status', ['pending', 'approved', 'locked'])
-            ->exists();
+    // 🔥 TẠO MỚI = LOCKED
+    Booking::create([
+        'user_id' => auth()->id(),
+        'facility_id' => $request->facility_id,
+        'booking_date' => $request->date,
+        'session' => $request->session,
+        'fullname' => auth()->user()->ho_ten,
+        'phone' => '---',
+        'price' => 0,
+        'payment_method' => 'admin_lock',
+        'status' => 'locked'
+    ]);
 
-        if ($exists) {
-            return back()->with('error', 'Slot này đã có người đặt hoặc đã khóa!');
-        }
+    return back()->with('success', 'Đã khóa sân!');
+}
 
-        Booking::create([
-            'user_id' => null,
-            'facility_id' => $request->facility_id,
-            'booking_date' => $request->date,
-            'session' => $request->session,
-            'fullname' => 'ADMIN LOCK',
-            'phone' => '0000000000',
-            'price' => 0,
-            'payment_method' => 'admin',
-            'status' => 'locked'
-        ]);
+public function facilityBookings($id)
+{
+    $facility = Facility::findOrFail($id);
 
-        return back()->with('success', 'Đã khóa sân!');
+    $bookings = Booking::where('facility_id', $id)
+        ->latest()
+        ->get();
+
+    return view('admin.facility-bookings', compact('facility','bookings'));
+}
+
+public function facilities(Request $request)
+{
+    $query = \App\Models\Facility::with('category');
+
+    // tìm kiếm
+    if ($request->keyword) {
+        $query->where('name', 'like', '%' . $request->keyword . '%');
     }
+
+    $facilities = $query->get();
+
+    // 🔥 Nếu là AJAX thì trả JSON
+    if ($request->ajax()) {
+        return response()->json($facilities);
+    }
+
+    // bình thường trả view
+    return view('admin.facilities', compact('facilities'));
+}
 }

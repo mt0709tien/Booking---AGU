@@ -65,38 +65,37 @@
 
     </div>
 
-    <!-- USER -->
-    <div style="font-size:14px;">
+   <!-- USER -->
+<div style="font-size:14px;">
 
-        @auth
+    @auth
 
-            <span class="me-2">
-                Xin chào, <strong>{{ Auth::user()->ho_ten }}</strong>
-            </span>
-
-            <form method="POST" action="{{ route('logout') }}" style="display:inline;">
-                @csrf
-                <button class="btn btn-sm btn-light">
-                    Đăng xuất
-                </button>
-            </form>
-
-        @endauth
-
-        @guest
-
-            <a href="{{ route('login') }}" class="btn btn-sm btn-light">
-                Đăng nhập
+        <span class="me-2">
+            Xin chào, 
+            <a href="{{ route('profile') }}" class="fw-bold text-decoration-none">
+                {{ Auth::user()->ho_ten }}
             </a>
+        </span>
 
-        @endguest
+        <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+            @csrf
+            <button class="btn btn-sm btn-light">
+                Đăng xuất
+            </button>
+        </form>
 
-    </div>
+    @endauth
+
+    @guest
+
+        <a href="{{ route('login') }}" class="btn btn-sm btn-light">
+            Đăng nhập
+        </a>
+
+    @endguest
 
 </div>
 </div>
-
-
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg navbar-light navbar-pink border-top border-bottom">
 

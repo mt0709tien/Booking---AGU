@@ -16,7 +16,8 @@ protected $fillable = [
 'fullname',
 'phone',
 'price',
-'payment_method'
+'payment_method',
+'status'
 
 ];
 

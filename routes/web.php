@@ -94,21 +94,27 @@ Route::get('/booking/{facility}',
 // Form đặt
 Route::get('/booking/form/{facility}',
 [BookingController::class,'form'])
+->middleware('auth') 
 ->name('booking.form');
 
-// Form đặt nhiều ca (POST từ checkbox trên bảng lịch)
-Route::post('/booking/form-multiple', [BookingController::class,'formMultiple'])
-    ->name('booking.form.multiple');
+// Form đặt nhiều ca
+Route::post('/booking/form-multiple',
+[BookingController::class,'formMultiple'])
+->middleware('auth') 
+->name('booking.form.multiple');
 
-// Lưu nhiều booking
-Route::post('/booking/store-multiple', [BookingController::class,'storeMultiple'])
-    ->name('booking.store.multiple');
 
-// Lưu
-Route::post('/booking/store',
-[BookingController::class,'store'])
-->name('booking.store');
+Route::middleware(['auth'])->group(function () {
 
+    Route::post('/booking/store',
+        [BookingController::class,'store'])
+        ->name('booking.store');
+
+    Route::post('/booking/store-multiple',
+        [BookingController::class,'storeMultiple'])
+        ->name('booking.store.multiple');
+
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -179,8 +185,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
 
     // Facilities
-    Route::get('/facilities', [FacilityController::class,'index'])
-    ->name('admin.facilities');
+    Route::get('/facilities', [AdminController::class,'facilities'])
+->name('admin.facilities');
 
     Route::get('/facilities/create', [FacilityController::class,'create'])
     ->name('facilities.create');
@@ -199,8 +205,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
 
     // Users
-    Route::get('/users', [AdminController::class,'users'])
-    ->name('admin.users');
+    //Route::get('/users', [AdminController::class,'users'])
+   // ->name('admin.users');
 
 
     // Bookings
@@ -243,4 +249,32 @@ use App\Http\Controllers\StatsController;
 
 // Khi bạn vào tên-miền.com/stats, nó sẽ gọi hàm index trong StatsController
 Route::get('/admin/stats', [StatsController::class, 'index'])->name('admin.stats');
+
+Route::post('/booking/unlock',
+    [BookingController::class,'unlock'])
+    ->name('admin.booking.unlock');
+
+Route::get('/admin/facility/{id}/bookings',
+    [AdminController::class,'facilityBookings'])
+    ->name('admin.facility.bookings');
+
+Route::get('/admin/users', [UserController::class,'index'])
+->name('admin.users');
+
+use App\Http\Controllers\ProfileController;
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/profile', [ProfileController::class, 'index'])
+        ->name('profile');
+
+    Route::post('/profile/update', [ProfileController::class, 'update'])
+        ->name('profile.update');
+
+    Route::post('/profile/password', [ProfileController::class, 'changePassword'])
+        ->name('profile.password');
+
+});
+
+
 
