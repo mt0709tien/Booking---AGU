@@ -59,6 +59,28 @@
             </div>
         </div>
 
+         {{-- 🔥 QUẢN LÝ HÓA ĐƠN (MỚI) --}}
+        <div class="col-md-4">
+            <div class="card shadow h-100 border-danger">
+                <div class="card-body text-center d-flex flex-column">
+                    <h5 class="card-title fw-bold mb-3">
+                        Quản lý hóa đơn
+                    </h5>
+
+                    <p class="text-muted mb-4">
+                        Xem, tạo và quản lý các hóa đơn
+                        thanh toán của người dùng.
+                    </p>
+
+                    <a href="{{ route('admin.invoices') }}"
+                       class="btn btn-danger mt-auto">
+                       Quản lý
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
 
         {{-- Quản lý người dùng --}}
         <div class="col-md-4">

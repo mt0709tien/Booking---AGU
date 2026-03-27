@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\Facility;
 use App\Models\Booking;
@@ -166,92 +167,101 @@ class BookingController extends Controller
     | Form nhiều ca
     |--------------------------------------------------------------------------
     */
-    public function formMultiple(Request $request)
-    {
-        $items = $request->bookings;
-        if (!$items) return back()->with('error', 'Chưa chọn ca!');
+    /*
+|--------------------------------------------------------------------------
+| Form nhiều ca
+|--------------------------------------------------------------------------
+*/
+public function formMultiple(Request $request)
+{
+    $items = $request->bookings;
 
-        list($facility_id) = explode('|', is_array($items) ? $items[0] : $items);
+    if (!$items) {
+        return back()->with('error', 'Chưa chọn ca!');
+    }
+
+    // lấy facility từ item đầu
+    $first = is_array($items) ? $items[0] : $items;
+    list($facility_id) = explode('|', $first);
+
+    $facility = Facility::find($facility_id);
+
+    return view('booking.form-multiple', [
+        'items' => is_array($items) ? $items : [$items],
+        'facility' => $facility,
+        'isMultiple' => true
+    ]);
+}
+
+public function storeMultiple(Request $request)
+{
+    $items = $request->bookings;
+
+    if (is_string($items)) {
+        $items = explode(',', $items);
+    }
+
+    if (!$items || count($items) == 0) {
+        return back()->with('error', 'Dữ liệu đặt lịch bị trống!');
+    }
+
+    // 🔥 TẠO GROUP ID CHUNG
+    $groupId = Str::uuid();
+
+    foreach ($items as $item) {
+
+        $parts = explode('|', $item);
+        if (count($parts) < 3) continue;
+
+        list($facility_id, $date, $session) = $parts;
         $facility = Facility::find($facility_id);
 
-        return view('booking.form-multiple', [
-            'items' => is_array($items) ? $items : [$items],
-            'facility' => $facility,
-            'isMultiple' => true
+        if (!$facility) continue;
+
+        // 🔥 CHỈ CHẶN USER
+        if(!$this->isAdmin()){
+            $exists = Booking::where('facility_id', $facility_id)
+                ->whereDate('booking_date', $date)
+                ->where('session', $session)
+                ->whereIn('status', ['pending', 'approved', 'locked'])
+                ->exists();
+
+            if ($exists) continue;
+        }
+
+        $priceField = "price_{$session}";
+        $price = $facility->category->$priceField;
+
+        Booking::create([
+            'group_id' => $groupId, // 🔥 QUAN TRỌNG NHẤT
+            'user_id' => auth()->check() ? auth()->id() : null,
+            'facility_id' => $facility_id,
+            'booking_date' => $date,
+            'session' => $session,
+            'fullname' => $request->fullname,
+            'phone' => $request->phone,
+            'price' => $price,
+            'payment_method' => $request->payment_method,
+            'status' => $this->isAdmin() ? 'locked' : 'pending'
         ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Lưu nhiều lịch
-    |--------------------------------------------------------------------------
-    */
-    public function storeMultiple(Request $request)
-    {
-        $items = $request->bookings;
+    // 🔔 Notify
+    if(!$this->isAdmin()){
+        $admins = User::where('vai_tro', 'admin')->get();
 
-        if (is_string($items)) {
-            $items = explode(',', $items);
+        foreach ($admins as $admin) {
+            $admin->notify(new BookingNotification(
+                'Đơn mới',
+                'Có người vừa đặt nhiều lịch!',
+                route('admin.bookings')
+            ));
         }
-
-        if (!$items || count($items) == 0) {
-            return back()->with('error', 'Dữ liệu đặt lịch bị trống!');
-        }
-
-        foreach ($items as $item) {
-
-            $parts = explode('|', $item);
-            if (count($parts) < 3) continue;
-
-            list($facility_id, $date, $session) = $parts;
-            $facility = Facility::find($facility_id);
-
-            if (!$facility) continue;
-
-            // 🔥 CHỈ CHẶN USER
-            if(!$this->isAdmin()){
-                $exists = Booking::where('facility_id', $facility_id)
-                    ->whereDate('booking_date', $date)
-                    ->where('session', $session)
-                    ->whereIn('status', ['pending', 'approved', 'locked'])
-                    ->exists();
-
-                if ($exists) continue;
-            }
-
-            $priceField = "price_{$session}";
-            $price = $facility->category->$priceField;
-
-            Booking::create([
-                'user_id' => auth()->check() ? auth()->id() : null,
-                'facility_id' => $facility_id,
-                'booking_date' => $date,
-                'session' => $session,
-                'fullname' => $request->fullname,
-                'phone' => $request->phone,
-                'price' => $price,
-                'payment_method' => $request->payment_method,
-                'status' => $this->isAdmin() ? 'locked' : 'pending'
-            ]);
-        }
-
-        // 🔔 Notify
-        if(!$this->isAdmin()){
-            $admins = User::where('vai_tro', 'admin')->get();
-
-            foreach ($admins as $admin) {
-                $admin->notify(new BookingNotification(
-                    'Đơn mới',
-                    'Có người vừa đặt nhiều lịch!',
-                    route('admin.bookings')
-                ));
-            }
-        }
-
-        return redirect()->route('booking.home')
-            ->with('success', 'Đặt nhiều lịch thành công!');
     }
 
+    return redirect()->route('booking.home')
+        ->with('success', 'Đặt nhiều lịch thành công!');
+}
     /*
     |--------------------------------------------------------------------------
     | Admin khóa sân

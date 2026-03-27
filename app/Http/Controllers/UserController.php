@@ -107,4 +107,40 @@ class UserController extends Controller
         return redirect()->route('users.index')
             ->with('success','Xóa thành công');
     }
+    public function updateProfile(Request $request)
+{
+    $request->validate([
+        'ho_ten' => 'required|max:255',
+    ]);
+
+    $user = auth()->user();
+
+    $user->update([
+        'ho_ten' => $request->ho_ten
+    ]);
+
+    return back()->with('success', 'Cập nhật thông tin thành công!');
+}
+use Illuminate\Support\Facades\Hash;
+
+public function updatePassword(Request $request)
+{
+    $request->validate([
+        'old_password' => 'required',
+        'new_password' => 'required|min:6|confirmed',
+    ]);
+
+    $user = auth()->user();
+
+    // kiểm tra mật khẩu cũ
+    if (!Hash::check($request->old_password, $user->password)) {
+        return back()->with('error', 'Mật khẩu cũ không đúng');
+    }
+
+    $user->update([
+        'password' => bcrypt($request->new_password)
+    ]);
+
+    return back()->with('success', 'Đổi mật khẩu thành công!');
+}
 }

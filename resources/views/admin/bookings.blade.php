@@ -190,6 +190,35 @@
         </button>
     </form>
 
+{{-- 🔥 ĐÃ DUYỆT → XUẤT HÓA ĐƠN --}}
+@elseif($booking->status == 'approved')
+
+    @if($booking->group_id)
+
+        {{-- chỉ hiện dòng đầu tiên của group --}}
+        @php
+            $firstBooking = \App\Models\Booking::where('group_id', $booking->group_id)
+                                ->orderBy('id')
+                                ->first();
+        @endphp
+
+        @if($firstBooking && $firstBooking->id == $booking->id)
+            <a href="{{ route('admin.invoice.group', $booking->group_id) }}"
+               class="btn btn-primary btn-sm">
+               🧾 Xuất hóa đơn
+            </a>
+        @else
+            <span class="text-muted">Đã gộp</span>
+        @endif
+
+    @else
+        {{-- fallback nếu chưa có group --}}
+        <a href="{{ route('admin.invoice.create', $booking->id) }}"
+           class="btn btn-outline-primary btn-sm">
+           🧾 Xuất lẻ
+        </a>
+    @endif
+
 {{-- 👑 ADMIN TẠO --}}
 @elseif($isAdmin)
 
