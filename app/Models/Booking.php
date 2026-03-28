@@ -17,7 +17,8 @@ protected $fillable = [
 'phone',
 'price',
 'payment_method',
-'status'
+'status',
+'group_id'
 
 ];
 

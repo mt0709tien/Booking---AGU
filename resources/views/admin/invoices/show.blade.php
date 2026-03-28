@@ -14,8 +14,10 @@
         <p><strong>SĐT:</strong> {{ $invoice->booking->phone ?? '' }}</p>
         <p><strong>Cơ sở:</strong> {{ $invoice->booking->facility->name ?? '' }}</p>
         <p><strong>Ngày đặt:</strong> 
-            {{ \Carbon\Carbon::parse($invoice->booking->booking_date)->format('d/m/Y') }}
-        </p>
+           {{ optional($invoice->booking)->booking_date 
+    ? \Carbon\Carbon::parse($invoice->booking->booking_date)->format('d/m/Y') 
+    : 'N/A'
+}}
 
         <hr>
 

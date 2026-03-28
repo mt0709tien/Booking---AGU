@@ -75,6 +75,7 @@ class InvoiceController extends Controller
 
     $invoice = Invoice::create([
         'user_id' => $bookings->first()->user_id,
+        'booking_id' => $bookings->first()->id,
         'tong_tien' => $total,
         'status' => 'pending'
     ]);

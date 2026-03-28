@@ -31,7 +31,9 @@
                     <form method="POST" action="{{ route('booking.store.multiple') }}" id="booking-form">
                         @csrf
 
-                        <input type="hidden" name="bookings" value="{{ implode(',', $items) }}">
+                        @foreach($items as $item)
+    <input type="hidden" name="bookings[]" value="{{ $item }}">
+@endforeach
 
                         {{-- DANH SÁCH --}}
                         <div class="mb-3">
