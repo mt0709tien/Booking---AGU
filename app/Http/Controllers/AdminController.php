@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Booking;
 use App\Notifications\BookingNotification;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminController extends Controller
 {
@@ -170,5 +171,45 @@ public function facilities(Request $request)
 
     // bình thường trả view
     return view('admin.facilities', compact('facilities'));
+}
+
+
+public function export(Request $request)
+{
+    $type = $request->type;
+
+    if ($type == 'day') {
+        $date = $request->date;
+
+        $data = Booking::whereDate('booking_date', $date)->get();
+
+    } elseif ($type == 'month') {
+        $month = $request->month;
+
+        $data = Booking::whereMonth('booking_date', date('m', strtotime($month)))
+            ->whereYear('booking_date', date('Y', strtotime($month)))
+            ->get();
+
+    } else {
+        $year = $request->year;
+
+        $data = Booking::whereYear('booking_date', $year)->get();
+    }
+
+    // group theo cơ sở
+    $grouped = $data->groupBy(fn($item) => $item->facility->name);
+    $totalAll = $data->sum('price');
+
+    // 🔥 TRUYỀN BIẾN RIÊNG (KHÔNG TRUYỀN REQUEST)
+    $pdf = Pdf::loadView('admin.report_pdf', [
+        'grouped' => $grouped,
+        'totalAll' => $totalAll,
+        'type' => $type,
+        'date' => $request->date,
+        'month' => $request->month,
+        'year' => $request->year,
+    ]);
+
+    return $pdf->download('hoa_don.pdf');
 }
 }

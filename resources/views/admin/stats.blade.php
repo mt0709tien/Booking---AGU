@@ -1,38 +1,42 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('content')
-<div class="container">
-    <h3 class="mb-4">Thống kê hệ thống</h3>
+@section('admin_content')
 
-    <!-- Tổng quan -->
+<div class="container-fluid">
+
+    <h3 class="mb-4 fw-bold">📊 Thống kê hệ thống</h3>
+
+    <!-- TỔNG QUAN -->
     <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card text-center shadow">
+            <div class="card text-center shadow-sm border-0">
                 <div class="card-body">
-                    <h4>{{ number_format($totalUsers) }}</h4>
-                    <p>Tổng người dùng</p>
+                    <h4 class="fw-bold text-primary">{{ number_format($totalUsers) }}</h4>
+                    <p class="mb-0">Tổng người dùng</p>
                 </div>
             </div>
         </div>
+
         <div class="col-md-4">
-            <div class="card text-center shadow">
+            <div class="card text-center shadow-sm border-0">
                 <div class="card-body">
-                    <h4>{{ number_format($totalBookings) }}</h4>
-                    <p>Tổng đặt lịch</p>
+                    <h4 class="fw-bold text-success">{{ number_format($totalBookings) }}</h4>
+                    <p class="mb-0">Tổng đặt lịch</p>
                 </div>
             </div>
         </div>
+
         <div class="col-md-4">
-            <div class="card text-center shadow">
+            <div class="card text-center shadow-sm border-0">
                 <div class="card-body">
-                    <h4>{{ number_format($totalFacilities) }}</h4>
-                    <p>Tổng cơ sở vật chất</p>
+                    <h4 class="fw-bold text-danger">{{ number_format($totalFacilities) }}</h4>
+                    <p class="mb-0">Tổng cơ sở vật chất</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filter -->
+    <!-- FILTER NHANH -->
     <div class="mb-3">
         <a href="?filter=today" class="btn btn-sm btn-primary">Hôm nay</a>
         <a href="?filter=7days" class="btn btn-sm btn-secondary">7 ngày</a>
@@ -40,47 +44,54 @@
         <a href="?filter=year" class="btn btn-sm btn-warning">Năm</a>
     </div>
 
+    <!-- FILTER NGÀY -->
     <form method="GET" class="row g-2 mb-3">
-    <div class="col-md-3">
-        <input type="date" name="from" class="form-control" value="{{ request('from') }}">
-    </div>
-    <div class="col-md-3">
-        <input type="date" name="to" class="form-control" value="{{ request('to') }}">
-    </div>
-    <div class="col-md-3">
-        <button type="submit" class="btn btn-danger">Lọc</button>
-        <a href="{{ route('admin.stats') }}" class="btn btn-secondary">Reset</a>
-    </div>
-</form>
+        <div class="col-md-3">
+            <input type="date" name="from" class="form-control" value="{{ request('from') }}">
+        </div>
 
-    <!-- Chart -->
-    <div class="card shadow">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">
-    Doanh thu 
-    @if(request('from') && request('to'))
-        từ {{ request('from') }} đến {{ request('to') }}
-    @elseif($filter == 'today') 
-        hôm nay
-    @elseif($filter == 'month') 
-        tháng này
-    @elseif($filter == 'year') 
-        năm nay
-    @else 
-        7 ngày gần nhất
-    @endif
-</h5>
+        <div class="col-md-3">
+            <input type="date" name="to" class="form-control" value="{{ request('to') }}">
         </div>
+
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-danger">Lọc</button>
+            <a href="{{ route('admin.stats') }}" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
+
+    <!-- CHART -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <h5 class="mb-0 fw-bold">
+                Doanh thu (đã thanh toán)
+                @if(request('from') && request('to'))
+                    từ {{ request('from') }} đến {{ request('to') }}
+                @elseif($filter == 'today') 
+                    hôm nay
+                @elseif($filter == 'month') 
+                    tháng này
+                @elseif($filter == 'year') 
+                    năm nay
+                @else 
+                    7 ngày gần nhất
+                @endif
+            </h5>
+        </div>
+
         <div class="card-body">
-            <canvas id="revenueChart" style="height: 300px;"></canvas>
+            <canvas id="revenueChart" height="100"></canvas>
         </div>
     </div>
+
 </div>
 
+<!-- CHART JS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+
     const ctx = document.getElementById('revenueChart').getContext('2d');
 
     new Chart(ctx, {
@@ -90,14 +101,22 @@ document.addEventListener("DOMContentLoaded", function() {
             datasets: [{
                 label: 'Doanh thu (VNĐ)',
                 data: {!! json_encode($revenueData) !!},
-                borderColor: '#4e73df',
-                backgroundColor: 'rgba(78,115,223,0.1)',
+                borderWidth: 2,
                 fill: true,
-                tension: 0.3
+                tension: 0.4
             }]
         },
         options: {
             responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context){
+                            return context.raw.toLocaleString('vi-VN') + ' ₫';
+                        }
+                    }
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
@@ -110,6 +129,8 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     });
+
 });
 </script>
+
 @endsection

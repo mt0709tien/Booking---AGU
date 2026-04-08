@@ -12,13 +12,38 @@
         <div class="card-body p-4">
             <h4 class="text-center mb-4">Khôi phục mật khẩu</h4>
 
-            <form>
+            <!-- THÔNG BÁO -->
+            @if(session('status'))
+                <div class="alert alert-success">
+                    {{ session('status') }}
+                </div>
+            @endif
+
+            <!-- FORM -->
+            <form method="POST" action="{{ route('password.email') }}">
+                @csrf
+
                 <div class="mb-3">
-                    <input type="email" class="form-control" placeholder="Nhập email của bạn">
+                    <input 
+                        type="email" 
+                        name="email"
+                        class="form-control @error('email') is-invalid @enderror"
+                        placeholder="Nhập email của bạn"
+                        value="{{ old('email') }}"
+                        required
+                    >
+
+                    @error('email')
+                        <div class="invalid-feedback">
+                            {{ $message }}
+                        </div>
+                    @enderror
                 </div>
 
                 <div class="d-grid">
-                    <button class="btn btn-warning">Gửi yêu cầu</button>
+                    <button class="btn btn-warning">
+                        Gửi yêu cầu
+                    </button>
                 </div>
 
                 <div class="text-center mt-3">

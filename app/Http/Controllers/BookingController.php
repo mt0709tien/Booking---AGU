@@ -26,6 +26,7 @@ class BookingController extends Controller
     */
     public function create(Facility $facility)
 {
+     Carbon::setLocale('vi');
     $weekDays = [];
 
     for ($i = 0; $i < 7; $i++) {
@@ -259,8 +260,8 @@ public function storeMultiple(Request $request)
         }
     }
 
-    return redirect()->route('booking.home')
-        ->with('success', 'Đặt nhiều lịch thành công!');
+return redirect()->route('booking.my')
+    ->with('success', 'Đặt thành công. Vui lòng đợi điện thoại xác nhận đơn của bạn');
 }
     /*
     |--------------------------------------------------------------------------
@@ -306,5 +307,21 @@ public function unlock(Request $request)
         ->delete();
 
     return back()->with('success', 'Đã mở khóa!');
+}
+public function togglePayment(Request $request)
+{
+    $booking = Booking::findOrFail($request->id);
+
+    $booking->is_paid = !$booking->is_paid;
+
+    if ($booking->is_paid) {
+        $booking->paid_at = now(); // 🔥 GHI THỜI GIAN THANH TOÁN
+    } else {
+        $booking->paid_at = null;
+    }
+
+    $booking->save();
+
+    return back();
 }
 }

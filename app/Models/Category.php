@@ -9,7 +9,10 @@ class Category extends Model
 {
     protected $fillable = [
     'name',
-    'price'
+    'price_morning',
+    'price_afternoon',
+    'price_evening'
+
 ];
 
     public function facilities()

@@ -80,15 +80,26 @@ class InvoiceController extends Controller
         'status' => 'pending'
     ]);
 
-    // 🔥 tạo chi tiết cho từng ca
-    foreach ($bookings as $b) {
-        InvoiceDetail::create([
-            'invoice_id' => $invoice->id,
-            'ten_dich_vu' => 'Ca ' . $b->session,
-            'so_luong' => 1,
-            'don_gia' => $b->price
-        ]);
-    }
+// 🔥 mapping ca sang tiếng Việt
+$map = [
+    'morning' => 'Sáng',
+    'afternoon' => 'chiều',
+    'evening' => 'Tối'
+    
+];
+
+// 🔥 tạo chi tiết cho từng ca
+foreach ($bookings as $b) {
+
+    $sessionName = $map[$b->session] ?? $b->session;
+
+    InvoiceDetail::create([
+        'invoice_id' => $invoice->id,
+        'ten_dich_vu' => 'Ca ' . $sessionName,
+        'so_luong' => 1,
+        'don_gia' => $b->price
+    ]);
+}
 
     return redirect()->route('admin.invoices')
         ->with('success','Xuất hóa đơn thành công');

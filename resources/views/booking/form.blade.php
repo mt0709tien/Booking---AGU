@@ -88,7 +88,7 @@ action="{{ isset($isMultiple) ? route('booking.store.multiple') : route('booking
 
 {{-- ================= THÔNG TIN CHUNG ================= --}}
 <div class="mb-3">
-<label>Họ tên</label>
+<label>*Họ tên</label>
 <input type="text"
 name="fullname"
 class="form-control"
@@ -96,7 +96,7 @@ required>
 </div>
 
 <div class="mb-3">
-<label>Số điện thoại</label>
+<label>*Số điện thoại</label>
 <input type="text"
 name="phone"
 class="form-control"

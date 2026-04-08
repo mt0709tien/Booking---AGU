@@ -6,7 +6,7 @@
 <div class="container py-4">
 
     <h3 class="text-center mb-4 fw-bold text-primary">
-        Đặt nhiều lịch
+        Đặt lịch
     </h3>
 
     @if(session('success'))
@@ -78,23 +78,34 @@
                         </div>
 
                         {{-- THÔNG TIN --}}
-                        <div class="mb-3">
-                            <label>Họ tên</label>
-                            <input type="text" name="fullname" class="form-control" required>
-                        </div>
+                         <div class="mb-3">
+    <label class="text-danger fw-bold">*Họ tên</label>
+    <input type="text" name="fullname" class="form-control" required>
+     
+</div>
+
+<div class="mb-3">
+    <label class="text-danger fw-bold">*Số điện thoại</label>
+    <input type="text" name="phone" id="phone" class="form-control" required>
+    <small class="text-muted">Vui lòng nhập đúng số điện thoại để trung tâm liên hệ xác nhận đơn đặt của bạn</small>
+</div>
 
                         <div class="mb-3">
-                            <label>SĐT</label>
-                            <input type="text" name="phone" id="phone" class="form-control" required>
-                        </div>
+    <label>Thanh toán</label>
 
-                        <div class="mb-3">
-                            <label>Thanh toán</label>
-                            <select name="payment_method" id="payment_method" class="form-control">
-                                <option value="Tiền mặt">Tiền mặt</option>
-                                <option value="Chuyển khoản">Chuyển khoản</option>
-                            </select>
-                        </div>
+    <select name="payment_method" id="payment_method" class="form-control">
+        <option value="Tiền mặt">Tiền mặt</option>
+        <option value="Chuyển khoản">Chuyển khoản</option>
+    </select>
+
+    <small class="text-muted d-block mt-1">
+        Nếu chọn tiền mặt vui lòng liên hệ: Trung tâm Quản lý dịch vụ (Tầng trệt, Tòa nhà Thư viện, 18 Ung Văn Khiêm, Long Xuyên, An Giang) để thanh toán.
+    </small>
+
+    <small class="text-muted d-block">
+        Nếu chọn chuyển khoản vui lòng chụp mã QR hoặc chuyển trực tiếp vào tài khoản: Chủ TK Trường ĐH An Giang - STK 0151000012164 (Vietcombank). Nội dung: HỌ TÊN - ĐK SÂN
+    </small>
+</div>
 
                         {{-- NÚT --}}
                         <button id="btn-cash" class="btn btn-primary w-100">
@@ -104,7 +115,7 @@
                         <button type="button" id="btn-transfer"
                             class="btn btn-success w-100 mt-2"
                             style="display:none;">
-                            Tôi đã chuyển khoản
+                            Xác nhận đặt
                         </button>
 
                     </form>

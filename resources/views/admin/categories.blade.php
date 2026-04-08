@@ -1,86 +1,144 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('content')
+@section('admin_content')
 
-<div class="container">
+<div class="container-fluid">
 
-<h3 class="mb-4">Quản lý danh mục</h3>
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold">📂 Quản lý danh mục</h3>
 
-<a href="{{ route('admin.categories.create') }}" class="btn btn-success mb-3">
-+ Thêm danh mục
-</a>
+        <a href="{{ route('admin.categories.create') }}" class="btn btn-success">
+            + Thêm danh mục
+        </a>
+    </div>
 
-<form method="GET" action="{{ route('admin.categories') }}" class="mb-3">
-    <div class="row">
-        <div class="col-md-4">
-            <input type="text"
-                   name="keyword"
-                   class="form-control"
-                   placeholder="Tìm tên danh mục..."
-                   value="{{ request('keyword') }}">
+    <!-- 🔥 THÔNG BÁO -->
+    @if(session('success'))
+        <div id="alert-box" class="alert alert-success alert-dismissible fade show shadow-sm d-flex align-items-center">
+            <span class="me-2">✅</span>
+            {{ session('success') }}
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
         </div>
+    @endif
 
-        <div class="col-md-2">
-            <button class="btn btn-primary">Tìm kiếm</button>
-            <a href="{{ route('admin.categories') }}" class="btn btn-secondary">
-                Reset
-            </a>
+    <!-- SEARCH -->
+    <div class="card mb-3 shadow-sm border-0">
+        <div class="card-body">
+            <form method="GET" action="{{ route('admin.categories') }}">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <input type="text"
+                               name="keyword"
+                               class="form-control"
+                               placeholder="🔍 Tìm tên danh mục..."
+                               value="{{ request('keyword') }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <button class="btn btn-primary">
+                            Tìm kiếm
+                        </button>
+
+                        <a href="{{ route('admin.categories') }}" class="btn btn-secondary">
+                            Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
-</form>
 
-<table class="table table-bordered table-striped">
+    <!-- TABLE -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
 
-<thead>
-<tr>
-<th>ID</th>
-<th>Tên danh mục</th>
-<th>Giá sáng</th>
-<th>Giá chiều</th>
-<th>Giá tối</th>
-<th width="200">Hành động</th>
-</tr>
-</thead>
+            <table class="table table-hover align-middle mb-0">
 
-<tbody>
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>ID</th>
+                        <th class="text-start">Tên danh mục</th>
+                        <th>Giá sáng</th>
+                        <th>Giá chiều</th>
+                        <th>Giá tối</th>
+                        <th width="180">Hành động</th>
+                    </tr>
+                </thead>
 
-@foreach($categories as $category)
+                <tbody>
 
-<tr>
+                @forelse($categories as $category)
 
-<td>{{ $category->id }}</td>
+                    <tr>
+                        <td class="text-center">{{ $category->id }}</td>
 
-<td>{{ $category->name }}</td>
+                        <td class="fw-semibold">
+                            {{ $category->name }}
+                        </td>
 
-<td>{{ number_format($category->price_morning) }} VNĐ</td>
+                        <td class="text-center text-success fw-bold">
+                            {{ number_format($category->price_morning) }}đ
+                        </td>
 
-<td>{{ number_format($category->price_afternoon) }} VNĐ</td>
+                        <td class="text-center text-primary fw-bold">
+                            {{ number_format($category->price_afternoon) }}đ
+                        </td>
 
-<td>{{ number_format($category->price_evening) }} VNĐ</td>
+                        <td class="text-center text-danger fw-bold">
+                            {{ number_format($category->price_evening) }}đ
+                        </td>
 
-<td>
+                        <td class="text-center">
 
-<a href="{{ route('admin.categories.edit',$category->id) }}"
-class="btn btn-warning btn-sm">
-Sửa
-</a>
+                            <a href="{{ route('admin.categories.edit',$category->id) }}"
+                               class="btn btn-warning btn-sm me-1">
+                                ✏️ Sửa
+                            </a>
 
-<a href="{{ route('admin.categories.delete',$category->id) }}"
-class="btn btn-danger btn-sm"
-onclick="return confirm('Bạn có chắc muốn xoá?')">
-Xóa
-</a>
+                            <form action="{{ route('admin.categories.destroy', $category->id) }}" 
+                                  method="POST" 
+                                  onsubmit="return confirm('Bạn có chắc muốn xoá?')"
+                                  style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-danger btn-sm">
+                                    🗑 Xóa
+                                </button>
+                            </form>
 
-</td>
+                        </td>
+                    </tr>
 
-</tr>
+                @empty
 
-@endforeach
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            Không có dữ liệu
+                        </td>
+                    </tr>
 
-</tbody>
+                @endforelse
 
-</table>
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
 
 </div>
+
+<!-- 🔥 AUTO HIDE ALERT -->
+<script>
+setTimeout(() => {
+    let alert = document.getElementById('alert-box');
+    if (alert) {
+        alert.style.transition = "opacity 0.5s";
+        alert.style.opacity = "0";
+        setTimeout(() => alert.remove(), 500);
+    }
+}, 3000);
+</script>
 
 @endsection

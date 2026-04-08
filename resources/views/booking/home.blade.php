@@ -26,8 +26,8 @@
         @php
             $sports = [
                 ['id' => 1, 'name' => 'Sân Bóng Đá', 'icon' => '⚽'],
-                ['id' => 2, 'name' => 'Sân Bóng Chuyền', 'icon' => '🏐'],
-                ['id' => 3, 'name' => 'Sân Bóng Rổ', 'icon' => '🏀'],
+                ['id' => 3, 'name' => 'Sân Bóng Chuyền', 'icon' => '🏐'],
+                ['id' => 2, 'name' => 'Sân Bóng Rỗ', 'icon' => '🏀'],
                 ['id' => 4, 'name' => 'Sân Tennis', 'icon' => '🎾'],
             ];
         @endphp

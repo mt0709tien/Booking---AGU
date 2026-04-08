@@ -72,7 +72,7 @@ class CategoryController extends Controller
             'price_evening' => $request->price_evening
         ]);
 
-        return redirect()->route('admin.categories.index')
+        return redirect()->route('admin.categories')
                          ->with('success', 'Cập nhật thành công');
     }
 

@@ -1,6 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('content')
+@section('admin_content')
 
 <div class="container py-5">
 
@@ -59,7 +59,7 @@
             </div>
         </div>
 
-         {{-- 🔥 QUẢN LÝ HÓA ĐƠN (MỚI) --}}
+         {{--  QUẢN LÝ HÓA ĐƠN --}}
         <div class="col-md-4">
             <div class="card shadow h-100 border-danger">
                 <div class="card-body text-center d-flex flex-column">
@@ -147,6 +147,31 @@
                     <a href="{{ route('admin.stats') }}"
                        class="btn btn-danger mt-auto">
                        Xem thống kê
+                    </a>
+
+</div>
+            </div>
+        </div>
+
+
+        
+        {{-- Báo Cáo doanh số --}}
+        <div class="col-md-6">
+            <div class="card shadow h-100 border-danger">
+                <div class="card-body text-center d-flex flex-column">
+
+                    <h5 class="card-title fw-bold mb-3">
+                        Báo cáo doanh số
+                    </h5>
+
+                    <p class="text-muted mb-4">
+                        Xem báo cáo doanh số ngày, tháng, năm
+                        
+                    </p>
+
+                    <a href="{{ route('admin.report') }}"
+                       class="btn btn-danger mt-auto">
+                       Xem báo cáo
                     </a>
 
                 </div>

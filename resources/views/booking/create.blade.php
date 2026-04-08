@@ -41,193 +41,180 @@
 
 @foreach($weekDays as $day)
 <tr>
-    <td class="fw-bold">{{ $day['date']->isoFormat('dd') }}</td>
+    <td class="fw-bold">{{ ucwords($day['date']->locale('vi')->isoFormat('dddd')) }}</td>
     <td>{{ $day['date']->format('d-m-Y') }}</td>
 
     {{-- ===== SÁNG ===== --}}
-    <td>
-        @php $slot = $day['morning']; @endphp
 
-        @if($slot)
+<td>
+    @php $slot = $day['morning']; @endphp
 
-            {{-- 🔒 LOCKED --}}
-            @if($slot->status == 'locked')
 
-                @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-                    <form action="{{ route('admin.booking.unlock') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-                        <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-                        <input type="hidden" name="session" value="morning">
+@if($slot && $slot->status != 'cancelled')
 
-                        <button class="btn btn-dark btn-sm">
-                            🔓 Mở khóa
-                        </button>
-                    </form>
-                @else
-                    <span class="badge bg-dark px-3 py-2">Đã khóa</span>
-                @endif
+    @if($slot->status == 'locked')
 
-            {{-- ✔ APPROVED --}}
-            @elseif($slot->status == 'approved')
-                <span class="badge bg-danger px-3 py-2">Đã thuê</span>
+        @if(Auth::check() && Auth::user()->vai_tro == 'admin')
+            <form action="{{ route('admin.booking.unlock') }}" method="POST">
+                @csrf
+                <input type="hidden" name="facility_id" value="{{ $facility->id }}">
+                <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
+                <input type="hidden" name="session" value="morning">
 
-            {{-- ⏳ PENDING --}}
-            @elseif($slot->status == 'pending')
-                <span class="badge bg-warning text-dark px-3 py-2">Chờ duyệt</span>
-
-            @endif
-
+                <button class="btn btn-dark btn-sm">🔓 Mở khóa</button>
+            </form>
         @else
-
-            @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-
-                <form action="{{ route('admin.booking.lock') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-                    <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-                    <input type="hidden" name="session" value="morning">
-
-                    <button class="btn btn-warning btn-sm">
-                        Khóa sân
-                    </button>
-                </form>
-
-            @else
-
-                <input type="checkbox"
-                    name="bookings[]"
-                    value="{{ $facility->id }}|{{ $day['date']->format('Y-m-d') }}|morning">
-
-            @endif
-
+            <span class="badge bg-dark px-3 py-2">Đã khóa</span>
         @endif
 
-        <div class="small text-muted mt-1">
-            {{ number_format($facility->category->price_morning) }} VNĐ
-        </div>
-    </td>
+    @elseif($slot->status == 'approved')
+        <span class="badge bg-danger px-3 py-2">Đã thuê</span>
 
-    {{-- ===== CHIỀU ===== --}}
-    <td>
-        @php $slot = $day['afternoon']; @endphp
+    @elseif($slot->status == 'pending')
+        <span class="badge bg-warning text-dark px-3 py-2">Chờ duyệt</span>
 
-        @if($slot)
+    @endif
 
-            @if($slot->status == 'locked')
+@else
 
-                @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-                    <form action="{{ route('admin.booking.unlock') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-                        <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-                        <input type="hidden" name="session" value="afternoon">
+    @if(Auth::check() && Auth::user()->vai_tro == 'admin')
+        <form action="{{ route('admin.booking.lock') }}" method="POST">
+            @csrf
+            <input type="hidden" name="facility_id" value="{{ $facility->id }}">
+            <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
+            <input type="hidden" name="session" value="morning">
 
-                        <button class="btn btn-dark btn-sm">
-                            🔓 Mở khóa
-                        </button>
-                    </form>
-                @else
-                    <span class="badge bg-dark px-3 py-2">Đã khóa</span>
-                @endif
+            <button class="btn btn-warning btn-sm">Khóa sân</button>
+        </form>
+    @else
+        <input type="checkbox"
+            name="bookings[]"
+            value="{{ $facility->id }}|{{ $day['date']->format('Y-m-d') }}|morning">
+    @endif
 
-            @elseif($slot->status == 'approved')
-                <span class="badge bg-danger px-3 py-2">Đã thuê</span>
+@endif
 
-            @elseif($slot->status == 'pending')
-                <span class="badge bg-warning text-dark px-3 py-2">Chờ duyệt</span>
+<div class="small text-muted mt-1">
+    {{ number_format($facility->category->price_morning) }} VNĐ
+</div>
 
-            @endif
 
+</td>
+
+{{-- ===== CHIỀU ===== --}}
+
+<td>
+    @php $slot = $day['afternoon']; @endphp
+
+
+@if($slot && $slot->status != 'cancelled')
+
+    @if($slot->status == 'locked')
+
+        @if(Auth::check() && Auth::user()->vai_tro == 'admin')
+            <form action="{{ route('admin.booking.unlock') }}" method="POST">
+                @csrf
+                <input type="hidden" name="facility_id" value="{{ $facility->id }}">
+                <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
+                <input type="hidden" name="session" value="afternoon">
+
+                <button class="btn btn-dark btn-sm">🔓 Mở khóa</button>
+            </form>
         @else
-
-            @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-
-                <form action="{{ route('admin.booking.lock') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-                    <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-                    <input type="hidden" name="session" value="afternoon">
-
-                    <button class="btn btn-warning btn-sm">
-                        Khóa sân
-                    </button>
-                </form>
-
-            @else
-
-                <input type="checkbox"
-                    name="bookings[]"
-                    value="{{ $facility->id }}|{{ $day['date']->format('Y-m-d') }}|afternoon">
-
-            @endif
-
+            <span class="badge bg-dark px-3 py-2">Đã khóa</span>
         @endif
 
-        <div class="small text-muted mt-1">
-            {{ number_format($facility->category->price_afternoon) }} VNĐ
-        </div>
-    </td>
+    @elseif($slot->status == 'approved')
+        <span class="badge bg-danger px-3 py-2">Đã thuê</span>
 
-    {{-- ===== TỐI ===== --}}
-    <td>
-        @php $slot = $day['evening']; @endphp
+    @elseif($slot->status == 'pending')
+        <span class="badge bg-warning text-dark px-3 py-2">Chờ duyệt</span>
 
-        @if($slot)
+    @endif
 
-            @if($slot->status == 'locked')
+@else
 
-                @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-                    <form action="{{ route('admin.booking.unlock') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-                        <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-                        <input type="hidden" name="session" value="evening">
+    @if(Auth::check() && Auth::user()->vai_tro == 'admin')
+        <form action="{{ route('admin.booking.lock') }}" method="POST">
+            @csrf
+            <input type="hidden" name="facility_id" value="{{ $facility->id }}">
+            <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
+            <input type="hidden" name="session" value="afternoon">
 
-                        <button class="btn btn-dark btn-sm">
-                            🔓 Mở khóa
-                        </button>
-                    </form>
-                @else
-                    <span class="badge bg-dark px-3 py-2">Đã khóa</span>
-                @endif
+            <button class="btn btn-warning btn-sm">Khóa sân</button>
+        </form>
+    @else
+        <input type="checkbox"
+            name="bookings[]"
+            value="{{ $facility->id }}|{{ $day['date']->format('Y-m-d') }}|afternoon">
+    @endif
 
-            @elseif($slot->status == 'approved')
-                <span class="badge bg-danger px-3 py-2">Đã thuê</span>
+@endif
 
-            @elseif($slot->status == 'pending')
-                <span class="badge bg-warning text-dark px-3 py-2">Chờ duyệt</span>
+<div class="small text-muted mt-1">
+    {{ number_format($facility->category->price_afternoon) }} VNĐ
+</div>
 
-            @endif
 
+</td>
+
+{{-- ===== TỐI ===== --}}
+
+<td>
+    @php $slot = $day['evening']; @endphp
+
+
+@if($slot && $slot->status != 'cancelled')
+
+    @if($slot->status == 'locked')
+
+        @if(Auth::check() && Auth::user()->vai_tro == 'admin')
+            <form action="{{ route('admin.booking.unlock') }}" method="POST">
+                @csrf
+                <input type="hidden" name="facility_id" value="{{ $facility->id }}">
+                <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
+                <input type="hidden" name="session" value="evening">
+
+                <button class="btn btn-dark btn-sm">🔓 Mở khóa</button>
+            </form>
         @else
-
-            @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-
-                <form action="{{ route('admin.booking.lock') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-                    <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-                    <input type="hidden" name="session" value="evening">
-
-                    <button class="btn btn-warning btn-sm">
-                        Khóa sân
-                    </button>
-                </form>
-
-            @else
-
-                <input type="checkbox"
-                    name="bookings[]"
-                    value="{{ $facility->id }}|{{ $day['date']->format('Y-m-d') }}|evening">
-
-            @endif
-
+            <span class="badge bg-dark px-3 py-2">Đã khóa</span>
         @endif
 
-        <div class="small text-muted mt-1">
-            {{ number_format($facility->category->price_evening) }} VNĐ
-        </div>
+    @elseif($slot->status == 'approved')
+        <span class="badge bg-danger px-3 py-2">Đã thuê</span>
+
+    @elseif($slot->status == 'pending')
+        <span class="badge bg-warning text-dark px-3 py-2">Chờ duyệt</span>
+
+    @endif
+
+@else
+
+    @if(Auth::check() && Auth::user()->vai_tro == 'admin')
+        <form action="{{ route('admin.booking.lock') }}" method="POST">
+            @csrf
+            <input type="hidden" name="facility_id" value="{{ $facility->id }}">
+            <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
+            <input type="hidden" name="session" value="evening">
+
+            <button class="btn btn-warning btn-sm">Khóa sân</button>
+        </form>
+    @else
+        <input type="checkbox"
+            name="bookings[]"
+            value="{{ $facility->id }}|{{ $day['date']->format('Y-m-d') }}|evening">
+    @endif
+
+@endif
+
+<div class="small text-muted mt-1">
+    {{ number_format($facility->category->price_evening) }} VNĐ
+</div>
+
+
+</td>
+
     </td>
 
 </tr>

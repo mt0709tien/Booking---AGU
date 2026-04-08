@@ -1,13 +1,13 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('content')
+@section('admin_content')
 
 <div class="container py-5">
 
 <h3 class="mb-4">Quản lý cơ sở vật chất</h3>
 
-<a href="#" class="btn btn-success mb-3">
-Thêm cơ sở
+<a href="{{ route('facilities.create') }}" class="btn btn-success mb-3">
+    Thêm cơ sở
 </a>
 
 {{-- 🔍 LIVE SEARCH --}}
@@ -49,8 +49,16 @@ Thêm cơ sở
 </td>
 
 <td>
-    <a href="#" class="btn btn-warning btn-sm">Sửa</a>
-    <a href="#" class="btn btn-danger btn-sm">Xóa</a>
+    <a href="{{ route('facilities.edit', $facility->id) }}" 
+       class="btn btn-warning btn-sm">
+       Sửa
+    </a>
+
+    <a href="{{ route('facilities.delete', $facility->id) }}" 
+       class="btn btn-danger btn-sm"
+       onclick="return confirm('Bạn có chắc muốn xóa không?')">
+       Xóa
+    </a>
 </td>
 
 </tr>
@@ -64,17 +72,11 @@ Thêm cơ sở
 </div>
 
 {{-- 🔥 SCRIPT LIVE SEARCH --}}
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     let input = document.getElementById('liveSearch');
     let timeout;
-
-    if (!input) {
-        console.log("Không tìm thấy input ❌");
-        return;
-    }
 
     input.addEventListener('keyup', function () {
 
@@ -86,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             fetch(`{{ route('admin.facilities') }}?keyword=` + keyword, {
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest' // 🔥 QUAN TRỌNG
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
             .then(res => res.json())
@@ -120,8 +122,16 @@ document.addEventListener('DOMContentLoaded', function () {
                             </td>
 
                             <td>
-                                <a href="#" class="btn btn-warning btn-sm">Sửa</a>
-                                <a href="#" class="btn btn-danger btn-sm">Xóa</a>
+                                <a href="/admin/facilities/edit/${f.id}" 
+                                   class="btn btn-warning btn-sm">
+                                   Sửa 
+                                </a>
+
+                                <a href="/admin/facilities/delete/${f.id}" 
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Bạn có chắc muốn xóa không?')">
+                                   Xóa
+                                </a>
                             </td>
                         </tr>
                         `;
@@ -133,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(err => console.log("Lỗi:", err));
 
-        }, 300); // delay cho mượt
+        }, 300);
     });
 
 });

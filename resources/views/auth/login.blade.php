@@ -1,188 +1,167 @@
-<!DOCTYPE html>
-<html lang="vi">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <title>Đăng nhập hệ thống</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+@section('content')
 
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+    /* Background */
+    .bg-blur {
+        position: fixed;
+        inset: 0;
+        background: url('{{ asset("images/AGU.jpg") }}') no-repeat center center/cover;
+        z-index: -2;
+    }
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            height: 100vh;
-        }
+    .bg-overlay {
+        position: fixed;
+        inset: 0;
+        backdrop-filter: blur(3px);
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+    }
 
-        .login-card {
-            border-radius: 15px;
-        }
+    /* Wrapper */
+    .login-wrapper {
+        min-height: 100vh;
+    }
 
-        .eye-btn {
-            cursor: pointer;
-        }
-    </style>
-</head>
+    /* Card */
+    .login-card {
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+        padding: 30px;
+        transition: 0.3s;
+    }
 
-<body class="d-flex align-items-center justify-content-center">
+    .login-card:hover {
+        transform: translateY(-5px);
+    }
 
-    <div class="container">
+    /* Input */
+    .input-group-text {
+        background: #f1f1f1;
+    }
 
-        <div class="row justify-content-center">
+    /* Button */
+    .btn-primary {
+        border-radius: 10px;
+        font-weight: bold;
+    }
 
-            <div class="col-md-5">
+    /* Link */
+    a {
+        text-decoration: none;
+    }
+</style>
 
-                <div class="card login-card shadow-lg">
+<!-- Background layers -->
+<div class="bg-blur"></div>
+<div class="bg-overlay"></div>
 
-                    <div class="card-body p-4">
+<div class="login-wrapper d-flex align-items-center justify-content-center">
 
-                        <h3 class="text-center mb-4">
-                            ĐĂNG NHẬP HỆ THỐNG
-                        </h3>
+    <div class="col-md-4">
 
-                        {{-- Hiển thị lỗi --}}
-                        @if(session('error'))
-                        <div class="alert alert-danger">
-                            {{ session('error') }}
-                        </div>
-                        @endif
+        <div class="login-card">
 
+            <h3 class="text-center mb-4 fw-bold text-primary">
+                🔐 Đăng nhập hệ thống
+            </h3>
 
-                        <form method="POST" action="{{ route('login') }}">
+            {{-- lỗi validate --}}
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    @foreach ($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                    @endforeach
+                </div>
+            @endif
 
-                            @csrf
+            {{-- lỗi khác --}}
+            @if(session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
+            @endif
 
+            <form method="POST" action="{{ route('login') }}">
+                @csrf
 
-                            <!-- Email -->
-                            <div class="mb-3">
-
-                                <label class="form-label">
-                                    Email
-                                </label>
-
-                                <input type="email"
-                                    name="email"
-                                    class="form-control"
-                                    placeholder="Nhập email"
-                                    required>
-
-                            </div>
-
-
-                            <!-- Password -->
-                            <div class="mb-2">
-
-                                <label class="form-label">
-                                    Mật khẩu
-                                </label>
-
-                                <div class="input-group">
-
-                                    <input type="password"
-                                        name="password"
-                                        id="password"
-                                        class="form-control"
-                                        placeholder="Nhập mật khẩu"
-                                        required>
-
-                                    <button type="button"
-                                        class="btn btn-outline-secondary eye-btn"
-                                        onclick="togglePassword()">
-
-                                        <i id="eyeIcon" class="bi bi-eye"></i>
-
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-
-                           
-
-
-                            <!-- Button đăng nhập -->
-                            <div class="d-grid mb-3">
-
-                                <button type="submit"
-                                    class="btn btn-primary">
-
-                                    Đăng nhập
-
-                                </button>
-
-                            </div>
-
-
-                            <!-- Button đăng ký -->
-                            <div class="d-grid">
-
-                                <a href="{{ route('register') }}"
-                                    class="btn btn-outline-success">
-
-                                    Đăng ký tài khoản mới
-
-                                </a>
-
-                            </div>
-
-                        </form>
-
-                    </div>
-
+                <!-- Email -->
+                <div class="mb-3 input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-envelope"></i>
+                    </span>
+                    <input type="email"
+                        name="email"
+                        value="{{ old('email') }}"
+                        class="form-control"
+                        placeholder="Email"
+                        required>
                 </div>
 
+                <!-- Password -->
+                <div class="mb-3 input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-lock"></i>
+                    </span>
 
-                <p class="text-center text-white mt-3">
+                    <input type="password"
+                        name="password"
+                        id="password"
+                        class="form-control"
+                        placeholder="Mật khẩu"
+                        required>
 
-                    © {{ date('Y') }} Hệ thống quản lý cơ sở vật chất
+                    <button type="button"
+                        class="btn btn-outline-secondary"
+                        onclick="togglePassword()">
+                        <i id="eyeIcon" class="bi bi-eye"></i>
+                    </button>
+                </div>
 
-                </p>
+                <!-- Quên mật khẩu -->
+                <div class="text-end mb-3">
+                    <a href="{{ url('/forgot-password') }}" class="text-primary">
+                        Quên mật khẩu?
+                    </a>
+                </div>
 
-            </div>
+                <!-- Submit -->
+                <button class="btn btn-primary w-100">
+                    Đăng nhập
+                </button>
+
+                <!-- Register -->
+                <div class="text-center mt-3">
+                    <span>Chưa có tài khoản?</span>
+                    <a href="{{ route('register') }}" class="fw-bold text-primary">
+                        Đăng ký ngay
+                    </a>
+                </div>
+
+            </form>
 
         </div>
 
     </div>
 
-
-    <script>
-
-        function togglePassword() {
-
-            let password = document.getElementById("password");
-            let icon = document.getElementById("eyeIcon");
-
-            if (password.type === "password") {
-
-                password.type = "text";
-
-                icon.classList.remove("bi-eye");
-                icon.classList.add("bi-eye-slash");
-
-            } else {
-
-                password.type = "password";
-
-                icon.classList.remove("bi-eye-slash");
-                icon.classList.add("bi-eye");
-
-            }
-
-        }
-        @if(session('success'))
-<div class="alert alert-success">
-    {{ session('success') }}
 </div>
-@endif
 
-    </script>
+<script>
+function togglePassword() {
+    let password = document.getElementById("password");
+    let icon = document.getElementById("eyeIcon");
 
-</body>
+    if (password.type === "password") {
+        password.type = "text";
+        icon.classList.replace("bi-eye", "bi-eye-slash");
+    } else {
+        password.type = "password";
+        icon.classList.replace("bi-eye-slash", "bi-eye");
+    }
+}
+</script>
 
-</html>
+@endsection

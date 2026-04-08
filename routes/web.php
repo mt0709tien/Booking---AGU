@@ -11,6 +11,11 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\NewPasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -146,8 +151,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/categories/create', [CategoryController::class,'create'])->name('admin.categories.create');
     Route::post('/categories/store', [CategoryController::class,'store'])->name('admin.categories.store');
     Route::get('/categories/edit/{id}', [CategoryController::class,'edit'])->name('admin.categories.edit');
-    Route::post('/categories/update/{id}', [CategoryController::class,'update'])->name('admin.categories.update');
-    Route::get('/categories/delete/{id}', [CategoryController::class,'delete'])->name('admin.categories.delete');
+    Route::put('/categories/update/{id}', [CategoryController::class,'update'])
+    ->name('admin.categories.update');
+    Route::delete('/categories/{id}', [CategoryController::class,'destroy'])
+    ->name('admin.categories.destroy');
 
     // Facilities
     Route::get('/facilities', [AdminController::class,'facilities'])->name('admin.facilities');
@@ -211,4 +218,45 @@ Route::post('/invoice/paid/{id}', [InvoiceController::class,'markAsPaid'])
 Route::get('/invoice/pdf/{id}', [InvoiceController::class,'exportPDF'])
     ->name('admin.invoice.pdf');
 
+Route::get('/admin/report', [App\Http\Controllers\Admin\ReportController::class, 'index'])
+    ->name('admin.report');
+
+
 });
+Route::get('/forgot-password', function () {
+    return view('auth.forgot-password');
+})->name('password.request');
+
+Route::get('/report/export', [App\Http\Controllers\Admin\ReportController::class, 'export'])
+    ->name('report.export');
+
+
+// gửi email reset
+Route::post('/forgot-password', function (Request $request) {
+
+    $request->validate([
+        'email' => 'required|email'
+    ]);
+
+    $status = Password::sendResetLink(
+        $request->only('email')
+    );
+
+    return back()->with('status', __($status));
+
+})->name('password.email');
+
+
+
+// form nhập mật khẩu mới
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
+    ->name('password.reset');
+
+// submit mật khẩu mới
+Route::post('/reset-password', [NewPasswordController::class, 'store'])
+    ->name('password.update');
+
+Route::post('/admin/booking/toggle-payment', [BookingController::class, 'togglePayment'])
+    ->name('admin.booking.togglePayment');
+
+Route::get('/booking/my', [BookingController::class, 'my'])->name('booking.my');

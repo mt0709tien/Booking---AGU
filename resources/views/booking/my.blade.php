@@ -87,7 +87,7 @@
                                             class="btn btn-danger btn-sm"
                                             onclick="return confirm('Bạn chắc chắn muốn hủy?')"
                                         >
-                                            Hủy
+                                            Hủy đơn đặt
                                         </button>
                                     </form>
 

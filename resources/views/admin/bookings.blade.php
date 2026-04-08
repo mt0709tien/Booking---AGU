@@ -1,6 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('content')
+@section('admin_content')
 
 <div class="container">
 
@@ -15,13 +15,13 @@
 <th>Họ tên</th>
 <th>SĐT</th>
 <th>Cơ sở</th>
-<th>Ngày đặt</th>
+<th>Đặt ngày</th>
 <th>Ca</th>
 <th>Giá</th>
-<th>Thanh toán</th>
 <th>Trạng thái</th>
 <th>Thời gian đặt</th>
 <th>Hành động</th>
+<th>Thanh toán</th> {{-- 🔥 xuống cuối --}}
 </tr>
 </thead>
 
@@ -53,9 +53,7 @@
 
 <td>{{ $booking->facility->name ?? 'Không có' }}</td>
 
-<td>
-    {{ \Carbon\Carbon::parse($booking->booking_date)->format('d/m/Y') }}
-</td>
+<td>{{ \Carbon\Carbon::parse($booking->booking_date)->format('d/m/Y') }}</td>
 
 <td>
     @if($booking->session == 'morning')
@@ -70,53 +68,6 @@
 </td>
 
 <td>{{ number_format($booking->price) }} VNĐ</td>
-
-<!-- 🔥 THANH TOÁN -->
-<td>
-
-    {{-- 💵 TIỀN MẶT --}}
-    @if($booking->payment_method == 'Tiền mặt')
-        <span class="badge bg-secondary">
-            💵 Tiền mặt
-        </span>
-
-    {{-- 💳 CHUYỂN KHOẢN --}}
-    @elseif($booking->payment_method == 'Chuyển khoản')
-
-        @if($booking->status == 'pending')
-            <span class="badge bg-warning text-dark">
-                ⏳ Chờ chuyển khoản
-            </span>
-
-        @elseif($booking->status == 'approved')
-            <span class="badge bg-success">
-                💳 Đã chuyển khoản
-            </span>
-
-        @elseif($booking->status == 'rejected')
-            <span class="badge bg-danger">
-                ❌ Chuyển khoản lỗi
-            </span>
-
-        @else
-            <span class="badge bg-light text-dark">
-                Chuyển khoản
-            </span>
-        @endif
-
-    {{-- 🔒 ADMIN KHÓA --}}
-    @elseif($booking->payment_method == 'admin_lock')
-        <span class="badge bg-dark">
-            🔒 Admin khóa
-        </span>
-
-    @else
-        <span class="badge bg-light text-dark">
-            Khác
-        </span>
-    @endif
-
-</td>
 
 <!-- 🔥 TRẠNG THÁI -->
 <td>
@@ -145,18 +96,18 @@
     {{ $booking->created_at ? $booking->created_at->format('H:i d/m/Y') : '' }}
 </td>
 
-<!-- 🔥 HÀNH ĐỘNG -->
+<!-- 🔥 HÀNH ĐỘNG (GIỮ NGUYÊN LOGIC CŨ) -->
 <td>
 
 @php
     $isAdmin = $booking->user && strtolower($booking->user->vai_tro) == 'admin';
 @endphp
 
-{{-- ⚠️ CẢNH BÁO CHUYỂN KHOẢN --}}
-@if($booking->payment_method == 'Chuyển khoản' && $booking->status == 'pending')
+{{-- ⚠️ cảnh báo --}}
+@if(!$booking->is_paid && $booking->payment_method == 'Chuyển khoản')
     <div class="mb-1">
         <span class="badge bg-danger">
-            ⚠️ Chưa xác nhận chuyển khoản
+            ⚠️ Chưa thanh toán
         </span>
     </div>
 @endif
@@ -195,7 +146,6 @@
 
     @if($booking->group_id)
 
-        {{-- chỉ hiện dòng đầu tiên của group --}}
         @php
             $firstBooking = \App\Models\Booking::where('group_id', $booking->group_id)
                                 ->orderBy('id')
@@ -212,14 +162,13 @@
         @endif
 
     @else
-        {{-- fallback nếu chưa có group --}}
         <a href="{{ route('admin.invoice.create', $booking->id) }}"
            class="btn btn-outline-primary btn-sm">
            🧾 Xuất lẻ
         </a>
     @endif
 
-{{-- 👑 ADMIN TẠO --}}
+{{-- 👑 ADMIN --}}
 @elseif($isAdmin)
 
     <span class="text-primary fw-bold">Admin tạo</span>
@@ -230,6 +179,53 @@
     <span class="text-muted">Đã xử lý</span>
 
 @endif
+
+</td>
+
+<td>
+
+<form action="{{ route('admin.booking.togglePayment') }}" method="POST">
+    @csrf
+    <input type="hidden" name="id" value="{{ $booking->id }}">
+
+    {{-- 💵 TIỀN MẶT --}}
+    @if($booking->payment_method == 'Tiền mặt')
+
+        @if($booking->is_paid)
+            <button class="btn btn-success btn-sm">
+                💵 Đã thu tiền mặt
+            </button>
+        @else
+            <button class="btn btn-warning btn-sm">
+                💵 Chưa thu tiền mặt
+            </button>
+        @endif
+
+    {{-- 💳 CHUYỂN KHOẢN --}}
+    @elseif($booking->payment_method == 'Chuyển khoản')
+
+        @if($booking->is_paid)
+            <button class="btn btn-primary btn-sm">
+                💳 Đã chuyển khoản
+            </button>
+        @else
+            <button class="btn btn-danger btn-sm">
+                ⏳ Chờ chuyển khoản
+            </button>
+        @endif
+
+    {{-- 🔒 ADMIN KHÓA --}}
+    @elseif($booking->payment_method == 'admin_lock')
+
+        <span class="badge bg-dark">🔒 Admin khóa</span>
+
+    @else
+
+        <span class="text-muted">Không rõ</span>
+
+    @endif
+
+</form>
 
 </td>
 

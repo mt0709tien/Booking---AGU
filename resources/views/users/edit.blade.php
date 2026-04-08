@@ -1,7 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('content')
-
+@section('admin_content')
 <h3 class="mb-4">Sửa người dùng</h3>
 
 <form action="{{ route('users.update',$user->id) }}" method="POST">
