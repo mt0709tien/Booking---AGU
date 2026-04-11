@@ -260,3 +260,13 @@ Route::post('/admin/booking/toggle-payment', [BookingController::class, 'toggleP
     ->name('admin.booking.togglePayment');
 
 Route::get('/booking/my', [BookingController::class, 'my'])->name('booking.my');
+
+Route::get('/payment/{id}', [BookingController::class, 'payment'])
+    ->name('booking.payment');
+
+Route::post('/admin/booking/checkin', [BookingController::class, 'checkin'])
+    ->name('admin.booking.checkin'); 
+
+Route::get('/lien-he', function () {
+    return view('booking.lienhe');
+})->name('lienhe');

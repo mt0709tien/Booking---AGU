@@ -21,7 +21,8 @@
 <th>Trạng thái</th>
 <th>Thời gian đặt</th>
 <th>Hành động</th>
-<th>Thanh toán</th> {{-- 🔥 xuống cuối --}}
+<th>Thanh toán</th> 
+<th>Nhận sân</th>
 </tr>
 </thead>
 
@@ -226,6 +227,31 @@
     @endif
 
 </form>
+
+</td>
+<td>
+
+@if($booking->status == 'approved')
+
+    @if($booking->is_checked_in)
+        <span class="badge bg-success">
+            ✅ Đã nhận
+        </span>
+    @else
+        <form action="{{ route('admin.booking.checkin') }}" method="POST">
+            @csrf
+            <input type="hidden" name="id" value="{{ $booking->id }}">
+
+            <button class="btn btn-info btn-sm"
+                onclick="return confirm('Xác nhận khách đã nhận sân?')">
+                ✔️ Nhận sân
+            </button>
+        </form>
+    @endif
+
+@else
+    <span class="text-muted">---</span>
+@endif
 
 </td>
 

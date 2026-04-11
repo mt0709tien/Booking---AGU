@@ -324,4 +324,20 @@ public function togglePayment(Request $request)
 
     return back();
 }
+public function payment($id)
+{
+    $booking = Booking::findOrFail($id);
+
+    return view('booking.payment', compact('booking'));
+}
+public function checkin(Request $request)
+{
+    $booking = Booking::findOrFail($request->id);
+
+    $booking->is_checked_in = 1;
+    $booking->checked_in_at = now();
+    $booking->save();
+
+    return back()->with('success', 'Đã xác nhận nhận sân!');
+}
 }

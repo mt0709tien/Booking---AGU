@@ -21,19 +21,18 @@
         </div>
     @endif
 
-    <div class="row">
+    <div class="row justify-content-center">
 
-        {{-- ================= FORM ================= --}}
-        <div class="col-md-7">
+    <div class="col-md-7">
             <div class="card shadow">
                 <div class="card-body">
 
-                    <form method="POST" action="{{ route('booking.store.multiple') }}" id="booking-form">
+                    <form method="POST" action="{{ route('booking.store.multiple') }}">
                         @csrf
 
                         @foreach($items as $item)
-    <input type="hidden" name="bookings[]" value="{{ $item }}">
-@endforeach
+                            <input type="hidden" name="bookings[]" value="{{ $item }}">
+                        @endforeach
 
                         {{-- DANH SÁCH --}}
                         <div class="mb-3">
@@ -78,43 +77,60 @@
                         </div>
 
                         {{-- THÔNG TIN --}}
-                         <div class="mb-3">
-    <label class="text-danger fw-bold">*Họ tên</label>
-    <input type="text" name="fullname" class="form-control" required>
-     
-</div>
-
-<div class="mb-3">
-    <label class="text-danger fw-bold">*Số điện thoại</label>
-    <input type="text" name="phone" id="phone" class="form-control" required>
-    <small class="text-muted">Vui lòng nhập đúng số điện thoại để trung tâm liên hệ xác nhận đơn đặt của bạn</small>
-</div>
+                        <div class="mb-3">
+                            <label class="text-danger fw-bold">*Họ tên</label>
+                            <input type="text" name="fullname" class="form-control" required>
+                        </div>
 
                         <div class="mb-3">
-    <label>Thanh toán</label>
+                            <label class="text-danger fw-bold">*Số điện thoại</label>
+                            <input type="text" name="phone" class="form-control" required>
+                            <small class="text-muted">
+                                Vui lòng nhập đúng số điện thoại để trung tâm liên hệ xác nhận đơn đặt của bạn
+                            </small>
+                        </div>
 
-    <select name="payment_method" id="payment_method" class="form-control">
-        <option value="Tiền mặt">Tiền mặt</option>
-        <option value="Chuyển khoản">Chuyển khoản</option>
-    </select>
+                        {{-- THANH TOÁN --}}
+                        <div class="mb-3">
+                            <label>Thanh toán</label>
 
-    <small class="text-muted d-block mt-1">
-        Nếu chọn tiền mặt vui lòng liên hệ: Trung tâm Quản lý dịch vụ (Tầng trệt, Tòa nhà Thư viện, 18 Ung Văn Khiêm, Long Xuyên, An Giang) để thanh toán.
-    </small>
+                            <select name="payment_method" class="form-control">
+                                <option value="Tiền mặt">Tiền mặt</option>
+                                <option value="Chuyển khoản">Chuyển khoản</option>
+                            </select>
 
-    <small class="text-muted d-block">
-        Nếu chọn chuyển khoản vui lòng chụp mã QR hoặc chuyển trực tiếp vào tài khoản: Chủ TK Trường ĐH An Giang - STK 0151000012164 (Vietcombank). Nội dung: HỌ TÊN - ĐK SÂN
-    </small>
-</div>
+                            <small class="text-muted d-block mt-1">
+                                Nếu chọn tiền mặt vui lòng liên hệ trực tiếp tại Trung tâm Quản lý dịch vụ (Tầng trệt, Tòa nhà Thư viện và các Trung tâm, 18
+Ung Văn Khiêm, phường Đông Xuyên, TP. Long Xuyên, tỉnh An Giang) để thanh toán.
+                            </small>
+
+                            <small class="text-muted d-block">
+                                Nếu chọn chuyển khoản vui lòng chuyển khoản vào mã QR hoặc chuyển khoản trực tiếp vào tài khoản trường Đại Học An Giang - Chủ tài khoản: Trường Đại học An Giang.
+- Số tài khoản: 0151000012164.
+- Ngân hàng: Vietcombank chi nhánh An Giang.
+- Nội dung chuyển khoản ghi rõ: HỌ TÊN-ĐK SÂN ….(vd: ĐK sân bóng
+đá/bóng chuyền/bóng rổ).
+.
+                            </small>
+                        </div>
+
+                        {{-- 🔥 LƯU Ý --}}
+                        <div class="mt-3 p-3 bg-warning-subtle border border-warning rounded text-start">
+
+                            <p class="text-danger fw-bold mb-2">⚠️ Lưu ý:</p>
+
+                            <p class="mb-1">
+                                * Sau khi đặt vui lòng đợi điện thoại xác nhận đơn đặt phòng/sân của bạn.
+                            </p>
+
+                            <p class="mb-0">
+                                * Đơn đặt sân của quý khách sẽ tự động hủy nếu sau 1 giờ tính từ thời gian bắt đầu ca quý khách không nhận phòng/sân.
+                            </p>
+
+                        </div>
 
                         {{-- NÚT --}}
-                        <button id="btn-cash" class="btn btn-primary w-100">
-                            Xác nhận đặt
-                        </button>
-
-                        <button type="button" id="btn-transfer"
-                            class="btn btn-success w-100 mt-2"
-                            style="display:none;">
+                        <button class="btn btn-primary w-100 mt-3">
                             Xác nhận đặt
                         </button>
 
@@ -124,97 +140,8 @@
             </div>
         </div>
 
-        {{-- ================= QR RIÊNG ================= --}}
-        <div class="col-md-5">
-
-            <div id="qr-card" class="card shadow text-center" style="display:none;">
-                <div class="card-body">
-
-                    <h5 class="text-success">Thanh toán chuyển khoản</h5>
-
-                    <img id="qr-image" src="" class="my-3" style="max-width:250px;">
-
-                    <p><strong>Số tiền:</strong> {{ number_format($totalPrice) }} VNĐ</p>
-                    <p><strong>Ngân hàng:</strong> Vietcombank</p>
-                    <p><strong>STK:</strong> 1032 674159</p>
-
-                    <p class="text-danger">
-                        Nội dung: <span id="qr-content"></span>
-                    </p>
-
-                </div>
-            </div>
-
-        </div>
-
     </div>
 
 </div>
-
-{{-- ================= SCRIPT ================= --}}
-<script>
-
-const paymentSelect = document.getElementById('payment_method');
-const qrCard = document.getElementById('qr-card');
-const qrImage = document.getElementById('qr-image');
-const qrContent = document.getElementById('qr-content');
-const phoneInput = document.getElementById('phone');
-
-const btnCash = document.getElementById('btn-cash');
-const btnTransfer = document.getElementById('btn-transfer');
-
-// 👉 sửa tại đây
-const bank = "970436";
-const account = "1032674159";
-
-function generateQR() {
-
-    const amount = {{ $totalPrice }};
-    const phone = phoneInput.value || "KHACH";
-    const content = "DAT SAN " + phone;
-
-    const url = `https://img.vietqr.io/image/${bank}-${account}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(content)}`;
-
-    qrImage.src = url;
-    qrContent.innerText = content;
-}
-
-// chọn phương thức
-paymentSelect.addEventListener('change', function() {
-
-    if (this.value === "Chuyển khoản") {
-
-        qrCard.style.display = "block";
-        btnCash.style.display = "none";
-        btnTransfer.style.display = "block";
-
-        generateQR();
-
-    } else {
-
-        qrCard.style.display = "none";
-        btnCash.style.display = "block";
-        btnTransfer.style.display = "none";
-    }
-
-});
-
-// nhập SĐT -> update QR
-phoneInput.addEventListener('input', function() {
-    if (paymentSelect.value === "Chuyển khoản") {
-        generateQR();
-    }
-});
-
-// bấm đã chuyển khoản
-btnTransfer.addEventListener('click', function() {
-
-    alert("Đã ghi nhận! Vui lòng chờ admin duyệt.");
-
-    document.getElementById('booking-form').submit();
-
-});
-
-</script>
 
 @endsection

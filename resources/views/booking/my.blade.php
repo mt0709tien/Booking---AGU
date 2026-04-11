@@ -32,6 +32,7 @@
                         <th>Buổi</th>
                         <th>Giá</th>
                         <th>Trạng thái</th>
+                        <th>Thanh toán</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
@@ -55,46 +56,52 @@
                                 @endif
                             </td>
 
+                            <td>{{ number_format($booking->price) }} VNĐ</td>
+
+                            {{-- TRẠNG THÁI --}}
                             <td>
-                                {{ number_format($booking->price) }} VNĐ
-                            </td>
-
-                            <td>
-                               @if($booking->status == 'pending')
-    <span class="badge bg-warning">Chờ duyệt</span>
-
-@elseif($booking->status == 'approved')
-    <span class="badge bg-success">Đã duyệt</span>
-
-@elseif($booking->status == 'cancelled')
-    <span class="badge bg-secondary">Đã hủy</span>
-
-@else
-    <span class="badge bg-danger">Bị từ chối</span>
-@endif
-                            </td>
-
-                            <td>
-
                                 @if($booking->status == 'pending')
+                                    <span class="badge bg-warning">Chờ duyệt</span>
+                                @elseif($booking->status == 'approved')
+                                    <span class="badge bg-success">Đã duyệt</span>
+                                @elseif($booking->status == 'cancelled')
+                                    <span class="badge bg-secondary">Đã hủy</span>
+                                @else
+                                    <span class="badge bg-danger">Bị từ chối</span>
+                                @endif
+                            </td>
 
-                                    <form 
-                                        action="{{ route('booking.cancel', $booking->id) }}" 
-                                        method="POST"
-                                    >
+                            {{-- THANH TOÁN --}}
+                            <td>
+                                @if($booking->is_paid)
+                                    <span class="badge bg-success">✔️ Đã thanh toán</span>
+                                @else
+                                    <span class="badge bg-danger">❌ Chưa thanh toán</span>
+                                @endif
+                            </td>
+
+                            {{-- HÀNH ĐỘNG --}}
+                            <td>
+
+                                {{-- 🔥 NÚT THANH TOÁN --}}
+                                @if(!$booking->is_paid && $booking->payment_method == 'Chuyển khoản')
+                                    <a href="{{ route('booking.payment', $booking->id) }}"
+                                       class="btn btn-success btn-sm mb-1">
+                                        💳 Thanh toán
+                                    </a>
+                                @endif
+
+                                {{-- HỦY --}}
+                                @if($booking->status == 'pending')
+                                    <form action="{{ route('booking.cancel', $booking->id) }}" method="POST">
                                         @csrf
-                                        <button 
-                                            class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Bạn chắc chắn muốn hủy?')"
-                                        >
-                                            Hủy đơn đặt
+                                        <button class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Bạn chắc chắn muốn hủy?')">
+                                            Hủy đơn
                                         </button>
                                     </form>
-
                                 @else
-
                                     <span class="text-muted">---</span>
-
                                 @endif
 
                             </td>
@@ -104,7 +111,7 @@
                     @empty
 
                         <tr>
-                            <td colspan="6" class="text-muted">
+                            <td colspan="7" class="text-muted">
                                 Bạn chưa có lịch đặt nào
                             </td>
                         </tr>
