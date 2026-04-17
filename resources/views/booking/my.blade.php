@@ -2,129 +2,198 @@
 
 @section('content')
 
-<div class="container py-4">
+{{-- Tùy chỉnh CSS nhẹ nhàng --}}
+<style>
+    .booking-table thead th {
+        background-color: #f8f9fa;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+        color: #495057;
+        border-top: none;
+    }
+    .booking-table tbody td {
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+    }
+    .badge-soft {
+        padding: 0.5em 0.8em;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+    .facility-name {
+        font-weight: 600;
+        color: #2d3748;
+    }
+    .booking-date {
+        font-size: 0.9rem;
+        color: #4a5568;
+    }
+</style>
 
-    <h3 class="text-center fw-bold text-primary mb-4">
-        Lịch đã đặt của tôi
-    </h3>
+<div class="container py-5">
+
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h3 class="fw-bold text-primary">
+                <i class="fas fa-calendar-alt me-2"></i>Lịch đã đặt của tôi
+            </h3>
+            <p class="text-muted small">Theo dõi và quản lý các yêu cầu đặt chỗ của bạn</p>
+        </div>
+    </div>
 
     @if(session('success'))
-        <div class="alert alert-success text-center">
-            {{ session('success') }}
+        <div class="alert alert-success border-0 shadow-sm text-center mb-4">
+            <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
         </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger text-center">
-            {{ session('error') }}
+        <div class="alert alert-danger border-0 shadow-sm text-center mb-4">
+            <i class="fas fa-exclamation-circle me-1"></i> {{ session('error') }}
         </div>
     @endif
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-
-            <table class="table table-bordered text-center align-middle">
-
-                <thead class="table-light">
-                    <tr>
-                        <th>Sân</th>
-                        <th>Ngày</th>
-                        <th>Buổi</th>
-                        <th>Giá</th>
-                        <th>Trạng thái</th>
-                        <th>Thanh toán</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                    @forelse($bookings as $booking)
-
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table booking-table table-hover mb-0 text-center">
+                    <thead>
                         <tr>
-
-                            <td>{{ $booking->facility->name }}</td>
-
-                            <td>
-                                {{ \Carbon\Carbon::parse($booking->booking_date)->format('d-m-Y') }}
-                            </td>
-
-                            <td>
-                                @if($booking->session == 'morning') Sáng
-                                @elseif($booking->session == 'afternoon') Chiều
-                                @else Tối
-                                @endif
-                            </td>
-
-                            <td>{{ number_format($booking->price) }} VNĐ</td>
-
-                            {{-- TRẠNG THÁI --}}
-                            <td>
-                                @if($booking->status == 'pending')
-                                    <span class="badge bg-warning">Chờ duyệt</span>
-                                @elseif($booking->status == 'approved')
-                                    <span class="badge bg-success">Đã duyệt</span>
-                                @elseif($booking->status == 'cancelled')
-                                    <span class="badge bg-secondary">Đã hủy</span>
-                                @else
-                                    <span class="badge bg-danger">Bị từ chối</span>
-                                @endif
-                            </td>
-
-                            {{-- THANH TOÁN --}}
-                            <td>
-                                @if($booking->is_paid)
-                                    <span class="badge bg-success">✔️ Đã thanh toán</span>
-                                @else
-                                    <span class="badge bg-danger">❌ Chưa thanh toán</span>
-                                @endif
-                            </td>
-
-                            {{-- HÀNH ĐỘNG --}}
-                            <td>
-
-                                {{-- 🔥 NÚT THANH TOÁN --}}
-                                @if(!$booking->is_paid && $booking->payment_method == 'Chuyển khoản')
-                                    <a href="{{ route('booking.payment', $booking->id) }}"
-                                       class="btn btn-success btn-sm mb-1">
-                                        💳 Thanh toán
-                                    </a>
-                                @endif
-
-                                {{-- HỦY --}}
-                                @if($booking->status == 'pending')
-                                    <form action="{{ route('booking.cancel', $booking->id) }}" method="POST">
-                                        @csrf
-                                        <button class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Bạn chắc chắn muốn hủy?')">
-                                            Hủy đơn
-                                        </button>
-                                    </form>
-                                @else
-                                    <span class="text-muted">---</span>
-                                @endif
-
-                            </td>
-
+                            <th>Cơ sở</th>
+                            <th>Ngày đặt</th>
+                            <th>Khung giờ</th>
+                            <th>Tổng giá</th>
+                            <th>Trạng thái</th>
+                            <th>Thanh toán</th>
+                            <th>Thao tác</th>
                         </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($bookings as $booking)
+                            @php
+                                $firstRoom = $booking->roomBookings->first();
+                                $firstSport = $booking->sportBookings->first();
+                            @endphp
+                            <tr>
+                                {{-- CƠ SỞ --}}
+                                <td>
+                                    <div class="facility-name">
+                                        {{ optional(optional($firstRoom)->facility)->name 
+                                           ?? optional(optional($firstSport)->facility)->name 
+                                           ?? 'Không xác định' }}
+                                    </div>
+                                </td>
 
-                    @empty
+                                {{-- NGÀY --}}
+                                <td>
+                                    @foreach($booking->roomBookings as $room)
+                                        <div class="booking-date"><i class="far fa-calendar me-1"></i>{{ \Carbon\Carbon::parse($room->booking_date)->format('d/m/Y') }}</div>
+                                    @endforeach
 
-                        <tr>
-                            <td colspan="7" class="text-muted">
-                                Bạn chưa có lịch đặt nào
-                            </td>
-                        </tr>
+                                    @foreach($booking->sportBookings as $sport)
+                                        <div class="booking-date"><i class="far fa-calendar me-1"></i>{{ \Carbon\Carbon::parse($sport->booking_date)->format('d/m/Y') }}</div>
+                                    @endforeach
+                                </td>
 
-                    @endforelse
+                                {{-- THỜI GIAN --}}
+                                <td>
+                                    {{-- ROOM --}}
+                                    @foreach($booking->roomBookings as $room)
+                                        <div class="mb-1">
+                                            @if($room->session == 'morning')
+                                                <span class="badge bg-info bg-opacity-10 text-info badge-soft">Sáng (7h-11h)</span>
+                                            @elseif($room->session == 'afternoon')
+                                                <span class="badge bg-primary bg-opacity-10 text-primary badge-soft">Chiều (13h-17h)</span>
+                                            @elseif($room->session == 'evening')
+                                                <span class="badge bg-dark bg-opacity-10 text-dark badge-soft">Tối (17h-21h)</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
 
-                </tbody>
+                                    {{-- SPORT --}}
+                                    @foreach($booking->sportBookings as $sport)
+                                        <div class="mb-1">
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary badge-soft">
+                                                <i class="far fa-clock me-1"></i>
+                                                {{ \Carbon\Carbon::parse($sport->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($sport->end_time)->format('H:i') }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </td>
 
-            </table>
+                                {{-- GIÁ --}}
+                                <td class="text-success fw-bold">
+                                    {{ number_format($booking->price ?? 0) }}đ
+                                </td>
 
+                                {{-- TRẠNG THÁI --}}
+                                <td>
+                                    @if($booking->status == 'pending')
+                                        <span class="badge bg-warning text-dark badge-soft">Chờ duyệt</span>
+                                    @elseif($booking->status == 'approved')
+                                        <span class="badge bg-success badge-soft">Đã duyệt</span>
+                                    @elseif($booking->status == 'cancelled')
+                                        <span class="badge bg-secondary badge-soft">Đã hủy</span>
+                                    @elseif($booking->status == 'rejected')
+                                        <span class="badge bg-danger badge-soft">Từ chối</span>
+                                    @elseif($booking->status == 'locked')
+                                        <span class="badge bg-dark badge-soft">Đã khóa</span>
+                                    @else
+                                        <span class="badge bg-light text-dark badge-soft">Khác</span>
+                                    @endif
+                                </td>
+
+                                {{-- THANH TOÁN --}}
+                                <td>
+                                    @if($booking->is_paid)
+                                        <span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i>Đã thanh toán</span>
+                                    @else
+                                        <span class="text-danger small fw-bold"><i class="fas fa-times-circle me-1"></i>Chưa thanh toán</span>
+                                    @endif
+                                </td>
+
+                                {{-- HÀNH ĐỘNG --}}
+                                <td>
+                                    <div class="d-flex flex-column align-items-center gap-1">
+                                        @if(!$booking->is_paid 
+                                            && $booking->payment_method == 'transfer'
+                                            && $booking->status != 'cancelled')
+                                            <a href="{{ route('booking.payment', $booking->id) }}"
+                                               class="btn btn-sm btn-outline-success w-100">
+                                                <i class="fas fa-credit-card me-1"></i> Thanh toán
+                                            </a>
+                                        @endif
+
+                                        @if($booking->status == 'pending')
+                                            <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" class="w-100">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger w-100"
+                                                        onclick="return confirm('Bạn chắc chắn muốn hủy yêu cầu này?')">
+                                                    <i class="fas fa-trash-alt me-1"></i> Hủy
+                                                </button>
+                                            </form>
+                                        @else
+                                            <span class="text-muted small">N/A</span>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="py-5 text-muted">
+                                    <i class="fas fa-folder-open d-block mb-2 fa-2x"></i>
+                                    Bạn chưa có lịch đặt nào
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
 </div>
 
 @endsection

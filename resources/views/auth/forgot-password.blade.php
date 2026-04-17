@@ -3,56 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <title>Quên mật khẩu</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #e6f2ff, #ffffff);
+        }
+
+        .card {
+            border-radius: 16px;
+        }
+
+        .icon-box {
+            width: 70px;
+            height: 70px;
+            background: #e7f1ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: auto;
+            font-size: 30px;
+        }
+
+        .btn-main {
+            background: #0d6efd;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-main:hover {
+            background: #0b5ed7;
+        }
+    </style>
 </head>
-<body class="bg-light d-flex align-items-center justify-content-center vh-100">
 
-<div class="col-md-4">
-    <div class="card shadow">
-        <div class="card-body p-4">
-            <h4 class="text-center mb-4">Khôi phục mật khẩu</h4>
+<body class="d-flex align-items-center justify-content-center vh-100">
 
-            <!-- THÔNG BÁO -->
-            @if(session('status'))
-                <div class="alert alert-success">
-                    {{ session('status') }}
-                </div>
-            @endif
+<div class="col-md-5">
 
-            <!-- FORM -->
-            <form method="POST" action="{{ route('password.email') }}">
-                @csrf
+    <div class="card shadow text-center p-4">
 
-                <div class="mb-3">
-                    <input 
-                        type="email" 
-                        name="email"
-                        class="form-control @error('email') is-invalid @enderror"
-                        placeholder="Nhập email của bạn"
-                        value="{{ old('email') }}"
-                        required
-                    >
-
-                    @error('email')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-                    @enderror
-                </div>
-
-                <div class="d-grid">
-                    <button class="btn btn-warning">
-                        Gửi yêu cầu
-                    </button>
-                </div>
-
-                <div class="text-center mt-3">
-                    <a href="{{ route('login') }}">Quay lại đăng nhập</a>
-                </div>
-            </form>
-
+        {{-- ICON --}}
+        <div class="icon-box mb-3">
+            🔐
         </div>
+
+        {{-- TITLE --}}
+        <h4 class="fw-bold text-primary mb-3">
+            Quên mật khẩu
+        </h4>
+
+        {{-- TEXT --}}
+        <p class="text-muted">
+            Vui lòng liên hệ <strong>Admin</strong> để được cấp lại mật khẩu.
+        </p>
+
+        {{-- CONTACT --}}
+        <div class="bg-light rounded p-3 mb-4">
+            <div class="mb-2">
+                📞 <strong>0373276510</strong>
+            </div>
+            <div>
+                📧 <strong>mytien6510@gmail.com</strong>
+            </div>
+        </div>
+
+        {{-- BUTTON --}}
+        <div class="d-grid">
+            <a href="{{ route('login') }}" class="btn btn-main py-2">
+                ← Quay lại đăng nhập
+            </a>
+        </div>
+
     </div>
+
 </div>
 
 </body>

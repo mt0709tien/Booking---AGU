@@ -9,10 +9,11 @@ class Category extends Model
 {
     protected $fillable = [
     'name',
+    'type', // 🔥 BẮT BUỘC
     'price_morning',
     'price_afternoon',
-    'price_evening'
-
+    'price_evening',
+    'price_hour' // 🔥 BẮT BUỘC
 ];
 
     public function facilities()

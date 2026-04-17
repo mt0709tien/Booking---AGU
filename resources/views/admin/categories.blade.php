@@ -13,7 +13,7 @@
         </a>
     </div>
 
-    <!-- 🔥 THÔNG BÁO -->
+    <!-- ALERT -->
     @if(session('success'))
         <div id="alert-box" class="alert alert-success alert-dismissible fade show shadow-sm d-flex align-items-center">
             <span class="me-2">✅</span>
@@ -27,6 +27,7 @@
         <div class="card-body">
             <form method="GET" action="{{ route('admin.categories') }}">
                 <div class="row g-2">
+
                     <div class="col-md-4">
                         <input type="text"
                                name="keyword"
@@ -35,15 +36,20 @@
                                value="{{ request('keyword') }}">
                     </div>
 
+                    <!-- 🔥 FILTER TYPE -->
                     <div class="col-md-3">
-                        <button class="btn btn-primary">
-                            Tìm kiếm
-                        </button>
-
-                        <a href="{{ route('admin.categories') }}" class="btn btn-secondary">
-                            Reset
-                        </a>
+                        <select name="type" class="form-control">
+                            <option value="">-- Tất cả --</option>
+                            <option value="room" {{ request('type')=='room' ? 'selected' : '' }}>Phòng</option>
+                            <option value="sport" {{ request('type')=='sport' ? 'selected' : '' }}>Sân</option>
+                        </select>
                     </div>
+
+                    <div class="col-md-3">
+                        <button class="btn btn-primary">Tìm kiếm</button>
+                        <a href="{{ route('admin.categories') }}" class="btn btn-secondary">Reset</a>
+                    </div>
+
                 </div>
             </form>
         </div>
@@ -58,10 +64,9 @@
                 <thead class="table-dark text-center">
                     <tr>
                         <th>ID</th>
-                        <th class="text-start">Tên danh mục</th>
-                        <th>Giá sáng</th>
-                        <th>Giá chiều</th>
-                        <th>Giá tối</th>
+                        <th class="text-start">Tên</th>
+                        <th>Loại</th>
+                        <th>Giá</th>
                         <th width="180">Hành động</th>
                     </tr>
                 </thead>
@@ -77,16 +82,40 @@
                             {{ $category->name }}
                         </td>
 
-                        <td class="text-center text-success fw-bold">
-                            {{ number_format($category->price_morning) }}đ
+                        <!-- 🔥 TYPE -->
+                        <td class="text-center">
+                            @if($category->type == 'sport')
+                                <span class="badge bg-info">Sân</span>
+                            @else
+                                <span class="badge bg-primary">Phòng</span>
+                            @endif
                         </td>
 
-                        <td class="text-center text-primary fw-bold">
-                            {{ number_format($category->price_afternoon) }}đ
-                        </td>
+                        <!-- 🔥 GIÁ -->
+                        <td class="text-center">
 
-                        <td class="text-center text-danger fw-bold">
-                            {{ number_format($category->price_evening) }}đ
+                            @if($category->type == 'sport')
+
+                                <span class="text-success fw-bold">
+                                    {{ number_format($category->price_hour) }}đ / giờ
+                                </span>
+
+                            @else
+
+                                <div class="text-success fw-bold">
+                                    Sáng: {{ number_format($category->price_morning) }}đ
+                                </div>
+
+                                <div class="text-primary fw-bold">
+                                    Chiều: {{ number_format($category->price_afternoon) }}đ
+                                </div>
+
+                                <div class="text-danger fw-bold">
+                                    Tối: {{ number_format($category->price_evening) }}đ
+                                </div>
+
+                            @endif
+
                         </td>
 
                         <td class="text-center">
@@ -113,7 +142,7 @@
                 @empty
 
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">
+                        <td colspan="5" class="text-center py-4 text-muted">
                             Không có dữ liệu
                         </td>
                     </tr>
@@ -129,7 +158,7 @@
 
 </div>
 
-<!-- 🔥 AUTO HIDE ALERT -->
+<!-- AUTO HIDE -->
 <script>
 setTimeout(() => {
     let alert = document.getElementById('alert-box');

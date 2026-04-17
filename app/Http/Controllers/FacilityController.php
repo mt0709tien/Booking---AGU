@@ -9,16 +9,19 @@ use App\Models\Category;
 class FacilityController extends Controller
 {
 
-    // Danh sách cơ sở vật chất
+    // Danh sách
     public function index()
     {
-        $facilities = Facility::with('category')->get();
+        $facilities = Facility::with('category')
+    ->withCount('roomBookings')
+    ->withCount('sportBookings')
+    ->latest()
+    ->get();
 
         return view('facilities.index', compact('facilities'));
     }
 
-
-    // Trang thêm
+    // Form thêm
     public function create()
     {
         $categories = Category::all();
@@ -26,23 +29,22 @@ class FacilityController extends Controller
         return view('facilities.create', compact('categories'));
     }
 
-
-    // Lưu dữ liệu
+    // Lưu
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'category_id' => 'required',
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
         ]);
 
-        $data = $request->all();
+        $data = $request->only(['name','category_id','description']);
 
         // upload hình
         if ($request->hasFile('image')) {
 
             $file = $request->file('image');
-
             $filename = time().'_'.$file->getClientOriginalName();
 
             $file->move(public_path('images'), $filename);
@@ -56,30 +58,38 @@ class FacilityController extends Controller
             ->with('success','Thêm thành công');
     }
 
-
-    // Trang sửa
+    // Form sửa
     public function edit($id)
     {
         $facility = Facility::findOrFail($id);
-
         $categories = Category::all();
 
         return view('facilities.edit', compact('facility','categories'));
     }
 
-
     // Cập nhật
     public function update(Request $request, $id)
     {
-
         $facility = Facility::findOrFail($id);
 
-        $data = $request->all();
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
+        ]);
 
+        $data = $request->only(['name','category_id','description']);
+
+        // upload hình mới
         if ($request->hasFile('image')) {
 
-            $file = $request->file('image');
+            // xóa ảnh cũ nếu có
+            if ($facility->image && file_exists(public_path('images/'.$facility->image))) {
+                unlink(public_path('images/'.$facility->image));
+            }
 
+            $file = $request->file('image');
             $filename = time().'_'.$file->getClientOriginalName();
 
             $file->move(public_path('images'), $filename);
@@ -93,12 +103,15 @@ class FacilityController extends Controller
             ->with('success','Cập nhật thành công');
     }
 
-
     // Xóa
     public function delete($id)
     {
-
         $facility = Facility::findOrFail($id);
+
+        // xóa ảnh nếu có
+        if ($facility->image && file_exists(public_path('images/'.$facility->image))) {
+            unlink(public_path('images/'.$facility->image));
+        }
 
         $facility->delete();
 

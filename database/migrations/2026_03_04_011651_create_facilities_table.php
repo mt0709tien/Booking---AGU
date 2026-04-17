@@ -15,15 +15,16 @@ return new class extends Migration
 
             $table->id();
 
+            // liên kết với categories (đã có type bên đó)
             $table->foreignId('category_id')
-                  ->constrained()
+                  ->constrained('categories')
                   ->cascadeOnDelete();
 
             $table->string('name');
 
             $table->text('description')->nullable();
 
-            $table->string('image')->nullable(); // thêm cột hình ảnh
+            $table->string('image')->nullable();
 
             $table->timestamps();
 

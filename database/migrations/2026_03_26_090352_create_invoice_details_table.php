@@ -12,15 +12,26 @@ return new class extends Migration
     public function up(): void
     {
        Schema::create('invoice_details', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('invoice_id')->constrained()->onDelete('cascade');
+    $table->id();
 
-        $table->string('ten_dich_vu');
-        $table->integer('so_luong');
-        $table->decimal('don_gia', 10, 2);
+    $table->foreignId('invoice_id')
+        ->constrained('invoices')
+        ->cascadeOnDelete();
 
-        $table->timestamps();
-    });
+    // 🔥 thêm FK
+    $table->foreignId('facility_id')
+        ->nullable()
+        ->constrained('facilities')
+        ->nullOnDelete();
+
+    $table->string('ten_dich_vu');
+
+    $table->unsignedInteger('so_luong');
+
+    $table->decimal('don_gia', 10, 2)->unsigned();
+
+    $table->timestamps();
+});
     }
 
     /**

@@ -13,10 +13,16 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
+
             $table->string('type');
+
+            // 🔥 QUAN TRỌNG (fix lỗi của bạn)
             $table->morphs('notifiable');
+
             $table->text('data');
+
             $table->timestamp('read_at')->nullable();
+
             $table->timestamps();
         });
     }

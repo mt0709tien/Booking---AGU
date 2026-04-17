@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -93,5 +95,47 @@ class AuthController extends Controller
 
         return redirect()->route('login');
     }
+
+    // =========================
+// GOOGLE LOGIN
+// =========================
+
+public function redirectToGoogle()
+{
+    return Socialite::driver('google')->redirect();
+}
+
+public function handleGoogleCallback()
+{
+    try {
+        $googleUser = Socialite::driver('google')->stateless()->user();
+
+        // tìm user theo email
+        $user = User::where('email', $googleUser->getEmail())->first();
+
+        if (!$user) {
+            // tạo user mới
+            $user = User::create([
+                'ho_ten' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
+                'password' => Hash::make('12345678'),
+                'vai_tro' => 'user'
+            ]);
+        }
+
+        Auth::login($user);
+
+        // phân quyền giống login thường
+        if ($user->vai_tro === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->route('booking.home');
+
+    } catch (\Exception $e) {
+        return redirect()->route('login')
+            ->with('error', 'Đăng nhập Google thất bại!');
+    }
+}
 
 }

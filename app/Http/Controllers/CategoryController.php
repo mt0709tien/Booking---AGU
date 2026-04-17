@@ -7,52 +7,71 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    // Hiển thị danh sách + tìm kiếm
+    // Danh sách + tìm kiếm
     public function index(Request $request)
     {
         $query = Category::query();
 
-        // Tìm kiếm theo tên
         if ($request->keyword) {
             $query->where('name', 'like', '%' . $request->keyword . '%');
         }
 
-        $categories = $query->paginate(10);
+        if ($request->type) {
+            $query->where('type', $request->type);
+        }
+
+        $categories = $query->latest()->paginate(10);
 
         return view('admin.categories', compact('categories'));
     }
 
-    // Hiển thị form thêm
+    // Form thêm
     public function create()
     {
-        return view('category.create'); // hoặc admin.categories.create
+        return view('category.create');
     }
 
-    // Lưu dữ liệu
+    // Lưu
     public function store(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:room,sport',
+            'price_morning' => 'nullable|numeric',
+            'price_afternoon' => 'nullable|numeric',
+            'price_evening' => 'nullable|numeric',
+            'price_hour' => 'nullable|numeric',
+        ]);
+
         Category::create([
             'name' => $request->name,
-            'price_morning' => $request->price_morning,
-            'price_afternoon' => $request->price_afternoon,
-            'price_evening' => $request->price_evening
+            'type' => $request->type,
+
+            // room
+            'price_morning' => $request->type == 'room' ? $request->price_morning : null,
+            'price_afternoon' => $request->type == 'room' ? $request->price_afternoon : null,
+            'price_evening' => $request->type == 'room' ? $request->price_evening : null,
+
+            // sport
+            'price_hour' => $request->type == 'sport' ? $request->price_hour : null,
         ]);
 
         return redirect()->route('admin.categories')
-                         ->with('success', 'Thêm danh mục thành công');
+            ->with('success', 'Thêm danh mục thành công');
     }
 
-    // Hiển thị chi tiết
-    public function show($id)
-    {
-        $category = Category::with(['facilities' => function ($q) {
-            $q->withCount('bookings');
-        }])->findOrFail($id);
+    // Chi tiết
+   public function show($id)
+{
+    $category = Category::with(['facilities' => function ($q) {
+        $q->withCount('roomBookings')
+          ->withCount('sportBookings');
+    }])->findOrFail($id);
 
-        return view('category.show', compact('category'));
-    }
+    return view('category.show', compact('category'));
+}
 
-    // Hiển thị form sửa
+    // Form sửa
     public function edit($id)
     {
         $category = Category::findOrFail($id);
@@ -60,28 +79,41 @@ class CategoryController extends Controller
         return view('category.edit', compact('category'));
     }
 
-    // Cập nhật dữ liệu
+    // Update
     public function update(Request $request, $id)
     {
         $category = Category::findOrFail($id);
 
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:room,sport',
+            'price_morning' => 'nullable|numeric',
+            'price_afternoon' => 'nullable|numeric',
+            'price_evening' => 'nullable|numeric',
+            'price_hour' => 'nullable|numeric',
+        ]);
+
         $category->update([
             'name' => $request->name,
-            'price_morning' => $request->price_morning,
-            'price_afternoon' => $request->price_afternoon,
-            'price_evening' => $request->price_evening
+            'type' => $request->type,
+
+            'price_morning' => $request->type == 'room' ? $request->price_morning : null,
+            'price_afternoon' => $request->type == 'room' ? $request->price_afternoon : null,
+            'price_evening' => $request->type == 'room' ? $request->price_evening : null,
+
+            'price_hour' => $request->type == 'sport' ? $request->price_hour : null,
         ]);
 
         return redirect()->route('admin.categories')
-                         ->with('success', 'Cập nhật thành công');
+            ->with('success', 'Cập nhật thành công');
     }
 
-    // Xóa dữ liệu
+    // Xóa
     public function destroy($id)
     {
         Category::findOrFail($id)->delete();
 
         return redirect()->route('admin.categories')
-                         ->with('success', 'Xóa thành công');
+            ->with('success', 'Xóa thành công');
     }
 }

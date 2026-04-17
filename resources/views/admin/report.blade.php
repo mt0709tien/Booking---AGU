@@ -11,39 +11,54 @@
     {{-- FORM --}}
     <form method="GET" class="row g-3 mb-4">
 
-        <div class="col-md-3">
-            <select name="type" id="type" class="form-select" onchange="changeType()">
-                <option value="day" {{ $type=='day'?'selected':'' }}>Theo ngày</option>
-                <option value="month" {{ $type=='month'?'selected':'' }}>Theo tháng</option>
-                <option value="year" {{ $type=='year'?'selected':'' }}>Theo năm</option>
-            </select>
-        </div>
+    {{-- TYPE --}}
+    <div class="col-md-3">
+        <select name="type" id="type" class="form-select" onchange="this.form.submit()">
+            <option value="day" {{ request('type','day')=='day'?'selected':'' }}>Theo ngày</option>
+            <option value="month" {{ request('type')=='month'?'selected':'' }}>Theo tháng</option>
+            <option value="year" {{ request('type')=='year'?'selected':'' }}>Theo năm</option>
+        </select>
+    </div>
 
-        <div class="col-md-3 type-input" id="input-day">
-            <input type="date" name="date" value="{{ $date }}" class="form-control">
-        </div>
+    {{-- INPUT --}}
+    <div class="col-md-4">
 
-        <div class="col-md-3 type-input" id="input-month">
-            <input type="month" name="month" value="{{ request('month') }}" class="form-control">
-        </div>
+        @php $type = request('type','day'); @endphp
 
-        <div class="col-md-3 type-input" id="input-year">
-            <input type="number" name="year" value="{{ request('year') }}" class="form-control">
-        </div>
+        @if($type == 'day')
+            <input type="date" name="date"
+                   value="{{ request('date', date('Y-m-d')) }}"
+                   class="form-control">
 
-        <div class="col-md-3">
-            <select name="payment" class="form-select">
-                <option value="">-- Tất cả --</option>
-                <option value="Tiền mặt">Tiền mặt</option>
-                <option value="Chuyển khoản">Chuyển khoản</option>
-            </select>
-        </div>
+        @elseif($type == 'month')
+            <input type="month" name="month"
+                   value="{{ request('month', date('Y-m')) }}"
+                   class="form-control">
 
-        <div class="col-md-3">
-            <button class="btn btn-danger w-100">Xem báo cáo</button>
-        </div>
+        @else
+            <input type="number" name="year"
+                   value="{{ request('year', date('Y')) }}"
+                   class="form-control"
+                   placeholder="Nhập năm">
+        @endif
 
-    </form>
+    </div>
+
+    {{-- PAYMENT --}}
+    <div class="col-md-3">
+        <select name="payment" class="form-select">
+            <option value="" {{ request('payment')==''?'selected':'' }}>-- Tất cả --</option>
+            <option value="Tiền mặt" {{ request('payment')=='Tiền mặt'?'selected':'' }}>Tiền mặt</option>
+            <option value="Chuyển khoản" {{ request('payment')=='Chuyển khoản'?'selected':'' }}>Chuyển khoản</option>
+        </select>
+    </div>
+
+    {{-- BUTTON --}}
+    <div class="col-md-2">
+        <button class="btn btn-danger w-100">Xem</button>
+    </div>
+
+</form>
 
     {{-- TỔNG --}}
     <div class="card text-center mb-4 shadow border-success">
@@ -65,7 +80,7 @@
         </div>
     </div>
 
-    {{-- TIỀN MẶT + CHUYỂN KHOẢN --}}
+    {{-- TIỀN --}}
     <div class="row mb-4">
 
         <div class="col-md-6">
@@ -102,7 +117,7 @@
 
     </div>
 
-    {{-- CHI TIẾT TIỀN MẶT --}}
+    {{-- CASH DETAIL --}}
     <div id="cash-detail" style="display:none;">
         <div class="card mb-4 shadow">
             <div class="card-body">
@@ -116,7 +131,8 @@
                             <th>Ngày đặt</th>
                             <th>Ngày sử dụng</th>
                             <th>Cơ sở</th>
-                            <th>Ca</th>
+                            <th>Loại</th>
+                            <th>Thời gian</th>
                             <th>Khách</th>
                             <th>SĐT</th>
                             <th>Giá</th>
@@ -129,8 +145,27 @@
                             <td>{{ $b->paid_at ? \Carbon\Carbon::parse($b->paid_at)->format('d-m-Y') : '' }}</td>
                             <td>{{ $b->created_at ? \Carbon\Carbon::parse($b->created_at)->format('d-m-Y') : '' }}</td>
                             <td>{{ $b->booking_date ? \Carbon\Carbon::parse($b->booking_date)->format('d-m-Y') : '' }}</td>
-                            <td>{{ $b->facility->name }}</td>
-                            <td>{{ $b->session == 'morning' ? 'Sáng' : ($b->session == 'afternoon' ? 'Chiều' : 'Tối') }}</td>
+
+                            <td>{{ $b->facility_name }}</td>
+
+                            <td>
+                                @if($b->category_type == 'sport')
+                                    <span class="badge bg-primary">Sân</span>
+                                @else
+                                    <span class="badge bg-success">Phòng</span>
+                                @endif
+                            </td>
+
+                            <td>
+                                @if($b->start_time && $b->end_time)
+                                    {{ \Carbon\Carbon::parse($b->start_time)->format('H:i') }}
+                                    -
+                                    {{ \Carbon\Carbon::parse($b->end_time)->format('H:i') }}
+                                @else
+                                    {{ $b->session == 'morning' ? 'Sáng' : ($b->session == 'afternoon' ? 'Chiều' : 'Tối') }}
+                                @endif
+                            </td>
+
                             <td>{{ $b->fullname }}</td>
                             <td>{{ $b->phone }}</td>
                             <td>{{ number_format($b->price) }} VNĐ</td>
@@ -144,7 +179,7 @@
         </div>
     </div>
 
-    {{-- CHI TIẾT CHUYỂN KHOẢN --}}
+    {{-- BANK DETAIL --}}
     <div id="bank-detail" style="display:none;">
         <div class="card mb-4 shadow">
             <div class="card-body">
@@ -158,7 +193,8 @@
                             <th>Ngày đặt</th>
                             <th>Ngày sử dụng</th>
                             <th>Cơ sở</th>
-                            <th>Ca</th>
+                            <th>Loại</th>
+                            <th>Thời gian</th>
                             <th>Khách</th>
                             <th>SĐT</th>
                             <th>Giá</th>
@@ -171,8 +207,27 @@
                             <td>{{ $b->paid_at ? \Carbon\Carbon::parse($b->paid_at)->format('d-m-Y') : '' }}</td>
                             <td>{{ $b->created_at ? \Carbon\Carbon::parse($b->created_at)->format('d-m-Y') : '' }}</td>
                             <td>{{ $b->booking_date ? \Carbon\Carbon::parse($b->booking_date)->format('d-m-Y') : '' }}</td>
-                            <td>{{ $b->facility->name }}</td>
-                            <td>{{ $b->session == 'morning' ? 'Sáng' : ($b->session == 'afternoon' ? 'Chiều' : 'Tối') }}</td>
+
+                            <td>{{ $b->facility_name }}</td>
+
+                            <td>
+                                @if($b->category_type == 'sport')
+                                    <span class="badge bg-primary">Sân</span>
+                                @else
+                                    <span class="badge bg-success">Phòng</span>
+                                @endif
+                            </td>
+
+                            <td>
+                                @if($b->start_time && $b->end_time)
+                                    {{ \Carbon\Carbon::parse($b->start_time)->format('H:i') }}
+                                    -
+                                    {{ \Carbon\Carbon::parse($b->end_time)->format('H:i') }}
+                                @else
+                                    {{ $b->session == 'morning' ? 'Sáng' : ($b->session == 'afternoon' ? 'Chiều' : 'Tối') }}
+                                @endif
+                            </td>
+
                             <td>{{ $b->fullname }}</td>
                             <td>{{ $b->phone }}</td>
                             <td>{{ number_format($b->price) }} VNĐ</td>
@@ -186,44 +241,23 @@
         </div>
     </div>
 
+    {{-- EXPORT BUTTON --}}
+    <div class="col-md-3 mt-3">
+        <a href="{{ route('report.export', request()->all() + ['type_export' => 'pdf']) }}" 
+           class="btn btn-danger w-100">
+            🖨️ Xuất báo cáo
+        </a>
+    </div>
+
 </div>
 
-{{-- JS --}}
 <script>
 function toggleDetail(id) {
     let el = document.getElementById(id);
-    el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+    el.style.display = (el.style.display === "none" || el.style.display === "") 
+        ? "block" 
+        : "none";
 }
-
-function changeType() {
-    let type = document.getElementById('type').value;
-
-    document.getElementById('input-day').style.display = 'none';
-    document.getElementById('input-month').style.display = 'none';
-    document.getElementById('input-year').style.display = 'none';
-
-    if (type === 'day') {
-        document.getElementById('input-day').style.display = 'block';
-    } else if (type === 'month') {
-        document.getElementById('input-month').style.display = 'block';
-    } else {
-        document.getElementById('input-year').style.display = 'block';
-    }
-}
-
-document.addEventListener("DOMContentLoaded", changeType);
 </script>
-
-<form action="{{ route('report.export') }}" method="GET">
-    <input type="hidden" name="type" value="{{ $type }}">
-    <input type="hidden" name="date" value="{{ $date }}">
-    <input type="hidden" name="month" value="{{ request('month') }}">
-    <input type="hidden" name="year" value="{{ request('year') }}">
-    <input type="hidden" name="payment" value="{{ request('payment') }}">
-
-    <button class="btn btn-success mb-3">
-        Xuất báo cáo PDF
-    </button>
-</form>
 
 @endsection

@@ -6,40 +6,45 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-
     public function up(): void
     {
         Schema::create('bookings', function (Blueprint $table) {
+    $table->id();
 
-            $table->id();
+    $table->string('group_id')->nullable();
 
-            // ✅ CHO PHÉP NULL (QUAN TRỌNG)
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+    $table->foreignId('user_id')
+        ->nullable()
+        ->constrained('users')
+        ->nullOnDelete();
 
-            $table->foreignId('facility_id')->constrained()->cascadeOnDelete();
+    $table->string('fullname');
+    $table->string('phone');
 
-            $table->date('booking_date');
+    $table->unsignedBigInteger('price');
 
-            $table->string('session'); // morning / afternoon / evening
+    $table->string('payment_method');
 
-            $table->string('fullname');
-            $table->string('phone');
+    $table->boolean('is_paid')->default(false);
+    $table->timestamp('paid_at')->nullable();
 
-            $table->integer('price');
+    $table->boolean('is_checked_in')->default(false);
+    $table->timestamp('checked_in_at')->nullable();
 
-            $table->string('payment_method');
+    $table->enum('status', [
+        'pending',
+        'approved',
+        'rejected',
+        'cancelled',
+        'locked'
+    ])->default('pending');
 
-            // ✅ TRẠNG THÁI
-            $table->string('status')->default('pending');
-            // pending | approved | rejected | cancelled | locked
-
-            $table->timestamps();
-        });
+    $table->timestamps();
+});
     }
 
     public function down(): void
     {
         Schema::dropIfExists('bookings');
     }
-
 };

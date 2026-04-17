@@ -270,3 +270,21 @@ Route::post('/admin/booking/checkin', [BookingController::class, 'checkin'])
 Route::get('/lien-he', function () {
     return view('booking.lienhe');
 })->name('lienhe');
+
+Route::get('/co-so-vat-chat', [FacilityController::class, 'index'])
+    ->name('facilities.index');
+
+/*
+|--------------------------------------------------------------------------
+| Login Google
+|--------------------------------------------------------------------------
+*/
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])
+    ->name('google.login');
+
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])
+    ->name('google.callback');
+
+Route::post('/admin/lock-sport', [AdminController::class, 'lockSport'])
+    ->name('admin.lock.sport');
+

@@ -13,11 +13,9 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $data = $this->getReportData($request);
-
         return view('admin.report', $data);
     }
 
-    // 🔥 EXPORT PDF
     public function export(Request $request)
     {
         $data = $this->getReportData($request);
@@ -27,67 +25,83 @@ class ReportController extends Controller
         return $pdf->download('bao-cao-doanh-thu.pdf');
     }
 
-    // 🔥 HÀM CHUNG
     private function getReportData($request)
     {
         $type = $request->type ?? 'day';
 
-        $query = Booking::with('facility.category')
-            ->where('status', 'approved')
-            ->whereNotNull('paid_at');
+        // 🔥 LOAD RELATION ĐÚNG
+        $query = Booking::with([
+            'roomBookings.facility.category',
+            'sportBookings.facility.category'
+        ])
+        ->where('status', 'approved')
+        ->whereNotNull('paid_at');
 
-        // 🔥 FILTER TIME
+        // ===== FILTER TIME =====
         if ($type == 'day') {
 
             $date = $request->date ?? Carbon::today()->toDateString();
-            $carbonDate = Carbon::parse($date);
+            $query->whereDate('paid_at', $date);
 
-            $query->whereDate('paid_at', $carbonDate);
-
-        } 
-        elseif ($type == 'month') {
+        } elseif ($type == 'month') {
 
             $month = $request->month ?? Carbon::now()->format('Y-m');
-            $carbonMonth = Carbon::parse($month);
+            $carbon = Carbon::parse($month);
 
-            $query->whereMonth('paid_at', $carbonMonth->month)
-                  ->whereYear('paid_at', $carbonMonth->year);
+            $query->whereMonth('paid_at', $carbon->month)
+                  ->whereYear('paid_at', $carbon->year);
 
-        } 
-        else { // year
+        } else {
 
             $year = $request->year ?? Carbon::now()->year;
-
             $query->whereYear('paid_at', $year);
         }
 
-        // 🔥 FILTER PAYMENT
+        // ===== FILTER PAYMENT =====
         if ($request->payment) {
             $query->where('payment_method', $request->payment);
         }
 
-        $baseQuery = clone $query;
-        $bookings = $baseQuery->get();
+        $bookings = $query->get();
 
-        // 🔥 GROUP
+        // 🔥 MAP DATA TỪ BẢNG CON
+        $bookings = $bookings->map(function ($b) {
+
+            $room = $b->roomBookings->first();
+            $sport = $b->sportBookings->first();
+
+            $facility = $room?->facility ?? $sport?->facility;
+
+            $b->facility_name = $facility->name ?? 'Không có';
+            $b->category_type = $facility->category->type ?? 'unknown';
+
+            $b->booking_date = $room?->booking_date ?? $sport?->booking_date;
+
+            $b->start_time = $sport?->start_time;
+            $b->end_time = $sport?->end_time;
+
+            $b->session = $room?->session;
+
+            return $b;
+        });
+
+        // ===== GROUP =====
         if ($type == 'year') {
             $grouped = $bookings->groupBy(function ($item) {
                 return 'Tháng ' . Carbon::parse($item->paid_at)->format('m');
             });
         } else {
-            $grouped = $bookings->groupBy(function ($item) {
-                return $item->facility->category->name ?? 'Khác';
-            });
+            $grouped = $bookings->groupBy('facility_name');
         }
 
-        // 🔥 TOTAL
+        // ===== TOTAL =====
         $totalAll = $bookings->sum('price');
 
-        $totalCash = (clone $baseQuery)
+        $totalCash = $bookings
             ->where('payment_method', 'Tiền mặt')
             ->sum('price');
 
-        $totalBank = (clone $baseQuery)
+        $totalBank = $bookings
             ->where('payment_method', 'Chuyển khoản')
             ->sum('price');
 

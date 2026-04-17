@@ -2,6 +2,10 @@
 
 @section('content')
 
+@php
+    $hideFooter = true;
+@endphp
+
 <style>
 /* BIẾN CHIỀU CAO HEADER */
 :root{

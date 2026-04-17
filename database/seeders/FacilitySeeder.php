@@ -16,20 +16,16 @@ class FacilitySeeder extends Seeder
         SÂN BÓNG ĐÁ
         ============================
         */
+        $football = Category::where('name','Sân bóng đá')->firstOrFail();
 
-        $football = Category::where('name','Sân bóng đá')->first();
-
-        Facility::create([
-            'category_id'=>$football->id,
-            'name'=>'Sân bóng đá 1',
-            'description'=>'Sân bóng đá tiêu chuẩn'
-        ]);
-
-        Facility::create([
-            'category_id'=>$football->id,
-            'name'=>'Sân bóng đá 2',
-            'description'=>'Sân bóng đá tiêu chuẩn'
-        ]);
+        foreach(['Sân bóng đá 1','Sân bóng đá 2'] as $name){
+            Facility::create([
+                'category_id'=>$football->id,
+                'name'=>$name,
+                'description'=>'Sân bóng đá tiêu chuẩn',
+                'image'=>'BD.jpg'
+            ]);
+        }
 
 
         /*
@@ -37,20 +33,16 @@ class FacilitySeeder extends Seeder
         SÂN BÓNG RỔ
         ============================
         */
+        $basketball = Category::where('name','Sân bóng rổ')->firstOrFail();
 
-        $basketball = Category::where('name','Sân bóng rổ')->first();
-
-        Facility::create([
-            'category_id'=>$basketball->id,
-            'name'=>'Sân bóng rổ 1',
-            'description'=>'Sân bóng rổ tiêu chuẩn'
-        ]);
-
-        Facility::create([
-            'category_id'=>$basketball->id,
-            'name'=>'Sân bóng rổ 2',
-            'description'=>'Sân bóng rổ tiêu chuẩn'
-        ]);
+        foreach(['Sân bóng rổ 1','Sân bóng rổ 2'] as $name){
+            Facility::create([
+                'category_id'=>$basketball->id,
+                'name'=>$name,
+                'description'=>'Sân bóng rổ tiêu chuẩn',
+                'image'=>'BR.jpg'
+            ]);
+        }
 
 
         /*
@@ -58,20 +50,16 @@ class FacilitySeeder extends Seeder
         SÂN BÓNG CHUYỀN
         ============================
         */
+        $volleyball = Category::where('name','Sân bóng chuyền')->firstOrFail();
 
-        $volleyball = Category::where('name','Sân bóng chuyền')->first();
-
-        Facility::create([
-            'category_id'=>$volleyball->id,
-            'name'=>'Sân bóng chuyền 1',
-            'description'=>'Sân bóng chuyền tiêu chuẩn'
-        ]);
-
-        Facility::create([
-            'category_id'=>$volleyball->id,
-            'name'=>'Sân bóng chuyền 2',
-            'description'=>'Sân bóng chuyền tiêu chuẩn'
-        ]);
+        foreach(['Sân bóng chuyền 1','Sân bóng chuyền 2'] as $name){
+            Facility::create([
+                'category_id'=>$volleyball->id,
+                'name'=>$name,
+                'description'=>'Sân bóng chuyền tiêu chuẩn',
+                'image'=>'BC.jpg'
+            ]);
+        }
 
 
         /*
@@ -79,20 +67,16 @@ class FacilitySeeder extends Seeder
         SÂN TENNIS
         ============================
         */
+        $tennis = Category::where('name','Sân tennis')->firstOrFail();
 
-        $tennis = Category::where('name','Sân tennis')->first();
-
-        Facility::create([
-            'category_id'=>$tennis->id,
-            'name'=>'Sân tennis 1',
-            'description'=>'Sân tennis tiêu chuẩn'
-        ]);
-
-        Facility::create([
-            'category_id'=>$tennis->id,
-            'name'=>'Sân tennis 2',
-            'description'=>'Sân tennis tiêu chuẩn'
-        ]);
+        foreach(['Sân tennis 1','Sân tennis 2'] as $name){
+            Facility::create([
+                'category_id'=>$tennis->id,
+                'name'=>$name,
+                'description'=>'Sân tennis tiêu chuẩn',
+                'image'=>'TN.jpg' 
+            ]);
+        }
 
 
         /*
@@ -100,47 +84,37 @@ class FacilitySeeder extends Seeder
         HỘI TRƯỜNG
         ============================
         */
+        $hall600 = Category::where('name','Hội trường 600')->firstOrFail();
 
-        $hall600 = Category::where('name','Hội trường 600')->first();
+        foreach(['Hội trường 600A','Hội trường 600B'] as $name){
+            Facility::create([
+                'category_id'=>$hall600->id,
+                'name'=>$name,
+                'description'=>'Hội trường 600 chỗ',
+                'image'=>'HT.jpg'
+            ]);
+        }
 
-        Facility::create([
-            'category_id'=>$hall600->id,
-            'name'=>'Hội trường 600A',
-            'description'=>'Hội trường 600 chỗ'
-        ]);
+        $hall300 = Category::where('name','Hội trường 300')->firstOrFail();
 
-        Facility::create([
-            'category_id'=>$hall600->id,
-            'name'=>'Hội trường 600B',
-            'description'=>'Hội trường 600 chỗ'
-        ]);
+        foreach(['Hội trường 300A','Hội trường 300B'] as $name){
+            Facility::create([
+                'category_id'=>$hall300->id,
+                'name'=>$name,
+                'description'=>'Hội trường 300 chỗ',
+                'image'=>'HT.jpg'
+            ]);
+        }
 
+        $hall150 = Category::where('name','Hội trường 150')->firstOrFail();
 
-        $hall300 = Category::where('name','Hội trường 300')->first();
-
-        Facility::create([
-            'category_id'=>$hall300->id,
-            'name'=>'Hội trường 300A',
-            'description'=>'Hội trường 300 chỗ'
-        ]);
-
-        Facility::create([
-            'category_id'=>$hall300->id,
-            'name'=>'Hội trường 300B',
-            'description'=>'Hội trường 300 chỗ'
-        ]);
-
-
-        $hall150 = Category::where('name','Hội trường 150')->first();
-
-        foreach(['Hội trường 150A','Hội trường 150B','Hội trường 150C','Hội trường 150D'] as $room){
-
+        foreach(['Hội trường 150A','Hội trường 150B','Hội trường 150C','Hội trường 150D'] as $name){
             Facility::create([
                 'category_id'=>$hall150->id,
-                'name'=>$room,
-                'description'=>'Hội trường 150 chỗ'
+                'name'=>$name,
+                'description'=>'Hội trường 150 chỗ',
+                'image'=>'HT.jpg'
             ]);
-
         }
 
 
@@ -149,23 +123,17 @@ class FacilitySeeder extends Seeder
         PHÒNG HỌC
         ============================
         */
+        $classroom = Category::where('name','Phòng học')->firstOrFail();
 
-        $classroom = Category::where('name','Phòng học')->first();
-
-        $blocks = ['A','B','C','D'];
-
-        foreach($blocks as $block){
-
+        foreach(['A','B','C','D'] as $block){
             for($i=101;$i<=109;$i++){
-
                 Facility::create([
                     'category_id'=>$classroom->id,
                     'name'=>$block.$i,
-                    'description'=>'Phòng học nhà '.$block
+                    'description'=>'Phòng học nhà '.$block,
+                    'image'=>'PH.jpg'
                 ]);
-
             }
-
         }
 
 
@@ -174,17 +142,15 @@ class FacilitySeeder extends Seeder
         PHÒNG MÁY
         ============================
         */
-
-        $computer = Category::where('name','Phòng máy')->first();
+        $computer = Category::where('name','Phòng máy')->firstOrFail();
 
         for($i=1;$i<=9;$i++){
-
             Facility::create([
                 'category_id'=>$computer->id,
                 'name'=>'MT0'.$i,
-                'description'=>'Phòng máy vi tính'
+                'description'=>'Phòng máy vi tính',
+                'image'=>'PMT.jpg'
             ]);
-
         }
 
     }

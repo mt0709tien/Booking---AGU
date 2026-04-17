@@ -6,6 +6,47 @@
 
 <h3 class="mb-4">Danh sách đặt lịch</h3>
 
+<form method="GET" action="" class="mb-3">
+
+    <div class="row g-2 align-items-end">
+
+        <!-- Lọc theo tên cơ sở -->
+        <div class="col-md-4">
+            <label class="form-label">Cơ sở</label>
+            <input type="text"
+                   name="facility"
+                   class="form-control"
+                   value="{{ request('facility') }}"
+                   placeholder="Nhập tên cơ sở...">
+        </div>
+
+        <!-- Lọc theo ngày -->
+        <div class="col-md-3">
+            <label class="form-label">Ngày đặt</label>
+            <input type="date"
+                   name="date"
+                   class="form-control"
+                   value="{{ request('date') }}">
+        </div>
+
+        <!-- Nút lọc -->
+        <div class="col-md-3">
+            <button class="btn btn-primary w-100">
+                🔍 Lọc
+            </button>
+        </div>
+
+        <!-- Reset -->
+        <div class="col-md-2">
+            <a href="{{ url()->current() }}" class="btn btn-secondary w-100">
+                ♻️ Reset
+            </a>
+        </div>
+
+    </div>
+
+</form>
+
 <table class="table table-bordered table-striped">
 
 <thead>
@@ -16,7 +57,7 @@
 <th>SĐT</th>
 <th>Cơ sở</th>
 <th>Đặt ngày</th>
-<th>Ca</th>
+<th>Thời gian</th>
 <th>Giá</th>
 <th>Trạng thái</th>
 <th>Thời gian đặt</th>
@@ -29,6 +70,14 @@
 <tbody>
 
 @foreach($bookings as $booking)
+
+@php
+    $firstRoom  = $booking->roomBookings->first();
+    $firstSport = $booking->sportBookings->first();
+
+    $facility = $firstRoom?->facility ?? $firstSport?->facility;
+    $date     = $firstRoom?->booking_date ?? $firstSport?->booking_date;
+@endphp
 
 <tr>
 
@@ -52,20 +101,50 @@
 <td>{{ $booking->fullname }}</td>
 <td>{{ $booking->phone }}</td>
 
-<td>{{ $booking->facility->name ?? 'Không có' }}</td>
+<td>
+    {{ $facility->name ?? 'Không có' }}
 
-<td>{{ \Carbon\Carbon::parse($booking->booking_date)->format('d/m/Y') }}</td>
+    {{-- Badge loại --}}
+    @if(optional(optional($facility)->category)->type == 'sport')
+        <span class="badge bg-info">Sân</span>
+    @else
+        <span class="badge bg-primary">Phòng</span>
+    @endif
+</td>
 
 <td>
-    @if($booking->session == 'morning')
-        Sáng (7h - 11h)
-    @elseif($booking->session == 'afternoon')
-        Chiều (13h - 17h)
-    @elseif($booking->session == 'evening')
-        Tối (17h - 21h)
-    @else
-        Không xác định
-    @endif
+    @foreach($booking->roomBookings as $room)
+        <div>{{ \Carbon\Carbon::parse($room->booking_date)->format('d/m/Y') }}</div>
+    @endforeach
+
+    @foreach($booking->sportBookings as $sport)
+        <div>{{ \Carbon\Carbon::parse($sport->booking_date)->format('d/m/Y') }}</div>
+    @endforeach
+</td>
+
+<!-- 🔥 THỜI GIAN -->
+<td>
+    {{-- Sân --}}
+    @foreach($booking->sportBookings as $sport)
+        <div>
+            {{ \Carbon\Carbon::parse($sport->start_time)->format('H:i') }}
+            -
+            {{ \Carbon\Carbon::parse($sport->end_time)->format('H:i') }}
+        </div>
+    @endforeach
+
+    {{-- Phòng --}}
+    @foreach($booking->roomBookings as $room)
+        <div>
+            @if($room->session == 'morning')
+                Sáng (7h - 11h)
+            @elseif($room->session == 'afternoon')
+                Chiều (13h - 17h)
+            @elseif($room->session == 'evening')
+                Tối (17h - 21h)
+            @endif
+        </div>
+    @endforeach
 </td>
 
 <td>{{ number_format($booking->price) }} VNĐ</td>
@@ -92,57 +171,49 @@
     @endif
 </td>
 
-<!-- 🔥 THỜI GIAN -->
 <td>
     {{ $booking->created_at ? $booking->created_at->format('H:i d/m/Y') : '' }}
 </td>
 
-<!-- 🔥 HÀNH ĐỘNG (GIỮ NGUYÊN LOGIC CŨ) -->
 <td>
 
 @php
     $isAdmin = $booking->user && strtolower($booking->user->vai_tro) == 'admin';
 @endphp
 
-{{-- ⚠️ cảnh báo --}}
 @if(!$booking->is_paid && $booking->payment_method == 'Chuyển khoản')
     <div class="mb-1">
-        <span class="badge bg-danger">
-            ⚠️ Chưa thanh toán
-        </span>
+        <span class="badge bg-danger">⚠️ Chưa thanh toán</span>
     </div>
 @endif
 
-{{-- ✅ USER đặt --}}
 @if($booking->status == 'pending' && !$isAdmin)
 
     <a href="{{ route('admin.booking.approve',$booking->id) }}"
-       class="btn btn-success btn-sm">
-       ✔️ Duyệt
-    </a>
+       class="btn btn-success btn-sm">✔️ Duyệt</a>
 
     <a href="{{ route('admin.booking.reject',$booking->id) }}"
        class="btn btn-danger btn-sm"
-       onclick="return confirm('Bạn có chắc muốn từ chối?')">
-       ❌ Từ chối
-    </a>
+       onclick="return confirm('Bạn có chắc muốn từ chối?')">❌ Từ chối</a>
 
-{{-- 🔒 ADMIN KHÓA --}}
 @elseif($booking->status == 'locked')
 
     <form action="{{ route('admin.booking.unlock') }}" method="POST" style="display:inline;">
         @csrf
-        <input type="hidden" name="facility_id" value="{{ $booking->facility_id }}">
-        <input type="hidden" name="date" value="{{ $booking->booking_date }}">
-        <input type="hidden" name="session" value="{{ $booking->session }}">
+
+        {{-- 🔥 SỬA INPUT --}}
+        <input type="hidden" name="session" value="{{ $firstRoom->session ?? '' }}">
+<input type="hidden" name="start_time" value="{{ $firstSport->start_time ?? '' }}">
+<input type="hidden" name="end_time" value="{{ $firstSport->end_time ?? '' }}">
+         <input type="hidden" name="start_time" value="{{ $sport->start_time ?? '' }}">
+<input type="hidden" name="end_time" value="{{ $sport->end_time ?? '' }}">
 
         <button class="btn btn-dark btn-sm"
-            onclick="return confirm('Mở khóa ca này?')">
+            onclick="return confirm('Mở khóa?')">
             🔓 Mở khóa
         </button>
     </form>
 
-{{-- 🔥 ĐÃ DUYỆT → XUẤT HÓA ĐƠN --}}
 @elseif($booking->status == 'approved')
 
     @if($booking->group_id)
@@ -155,26 +226,20 @@
 
         @if($firstBooking && $firstBooking->id == $booking->id)
             <a href="{{ route('admin.invoice.group', $booking->group_id) }}"
-               class="btn btn-primary btn-sm">
-               🧾 Xuất hóa đơn
-            </a>
+               class="btn btn-primary btn-sm">🧾 Xuất hóa đơn</a>
         @else
             <span class="text-muted">Đã gộp</span>
         @endif
 
     @else
         <a href="{{ route('admin.invoice.create', $booking->id) }}"
-           class="btn btn-outline-primary btn-sm">
-           🧾 Xuất lẻ
-        </a>
+           class="btn btn-outline-primary btn-sm">🧾 Xuất lẻ</a>
     @endif
 
-{{-- 👑 ADMIN --}}
 @elseif($isAdmin)
 
     <span class="text-primary fw-bold">Admin tạo</span>
 
-{{-- ✔️ KHÁC --}}
 @else
 
     <span class="text-muted">Đã xử lý</span>
@@ -189,33 +254,18 @@
     @csrf
     <input type="hidden" name="id" value="{{ $booking->id }}">
 
-    {{-- 💵 TIỀN MẶT --}}
     @if($booking->payment_method == 'Tiền mặt')
 
-        @if($booking->is_paid)
-            <button class="btn btn-success btn-sm">
-                💵 Đã thu tiền mặt
-            </button>
-        @else
-            <button class="btn btn-warning btn-sm">
-                💵 Chưa thu tiền mặt
-            </button>
-        @endif
+        <button class="btn {{ $booking->is_paid ? 'btn-success' : 'btn-warning' }} btn-sm">
+            💵 {{ $booking->is_paid ? 'Đã thu' : 'Chưa thu' }}
+        </button>
 
-    {{-- 💳 CHUYỂN KHOẢN --}}
     @elseif($booking->payment_method == 'Chuyển khoản')
 
-        @if($booking->is_paid)
-            <button class="btn btn-primary btn-sm">
-                💳 Đã chuyển khoản
-            </button>
-        @else
-            <button class="btn btn-danger btn-sm">
-                ⏳ Chờ chuyển khoản
-            </button>
-        @endif
+        <button class="btn {{ $booking->is_paid ? 'btn-primary' : 'btn-danger' }} btn-sm">
+            💳 {{ $booking->is_paid ? 'Đã CK' : 'Chờ CK' }}
+        </button>
 
-    {{-- 🔒 ADMIN KHÓA --}}
     @elseif($booking->payment_method == 'admin_lock')
 
         <span class="badge bg-dark">🔒 Admin khóa</span>
@@ -229,21 +279,20 @@
 </form>
 
 </td>
+
 <td>
 
 @if($booking->status == 'approved')
 
     @if($booking->is_checked_in)
-        <span class="badge bg-success">
-            ✅ Đã nhận
-        </span>
+        <span class="badge bg-success">✅ Đã nhận</span>
     @else
         <form action="{{ route('admin.booking.checkin') }}" method="POST">
             @csrf
             <input type="hidden" name="id" value="{{ $booking->id }}">
 
             <button class="btn btn-info btn-sm"
-                onclick="return confirm('Xác nhận khách đã nhận sân?')">
+                onclick="return confirm('Xác nhận?')">
                 ✔️ Nhận sân
             </button>
         </form>

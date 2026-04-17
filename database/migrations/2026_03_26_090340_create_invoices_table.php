@@ -11,16 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('invoices', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('user_id')->constrained()->onDelete('cascade');
-        $table->foreignId('booking_id')->nullable()->constrained()->onDelete('cascade');
+       Schema::create('invoices', function (Blueprint $table) {
+    $table->id();
 
-        $table->decimal('tong_tien', 10, 2)->default(0);
-        $table->enum('status', ['pending', 'paid'])->default('pending');
+    $table->foreignId('user_id')
+        ->constrained('users')
+        ->cascadeOnDelete();
 
-        $table->timestamps();
-    });
+    $table->foreignId('booking_id')
+        ->nullable()
+        ->constrained('bookings')
+        ->nullOnDelete(); // 🔥 sửa ở đây
+
+    $table->decimal('tong_tien', 10, 2)->unsigned()->default(0);
+
+    $table->enum('status', ['pending', 'paid'])->default('pending');
+
+    $table->timestamps();
+});
     }
 
     /**

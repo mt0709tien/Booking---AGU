@@ -2,241 +2,287 @@
 
 @section('content')
 
-<div class="container py-4">
+{{-- Tùy chỉnh CSS nhanh để làm mượt giao diện --}}
+<style>
+    .booking-card { border-radius: 15px; border: none; }
+    .table-modern thead { background-color: #f8f9fa; }
+    .table-modern th { font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; }
+    .slot-item { background: #f0f7ff; border-radius: 8px; border: 1px solid #d0e3ff; transition: all 0.3s; }
+    .slot-item:hover { background: #e1efff; }
+    .form-label { font-weight: 600; color: #495057; }
+    .badge-status { font-size: 0.75rem; padding: 0.5em 0.8em; }
+    .btn-action { border-radius: 8px; font-weight: 600; transition: transform 0.2s; }
+    .btn-action:active { transform: scale(0.95); }
+    .price-text { color: #28a745; font-size: 1.1rem; }
+    input[type="checkbox"] { width: 1.2rem; height: 1.2rem; cursor: pointer; }
+</style>
 
-    <h3 class="text-center fw-bold text-primary mb-4">
-        {{ $facility->name }}
-    </h3>
+<div class="container py-5">
 
+    {{-- HEADER --}}
+    <div class="text-center mb-5">
+        <h2 class="fw-extrabold text-dark mb-2">{{ $facility->name }}</h2>
+        <div class="mx-auto" style="width: 60px; height: 4px; background: #0d6efd; border-radius: 2px;"></div>
+    </div>
+
+    {{-- THÔNG BÁO --}}
     @if(session('success'))
-        <div class="alert alert-success text-center">
-            {{ session('success') }}
+        <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 animate__animated animate__fadeIn">
+            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
         </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger text-center">
-            {{ session('error') }}
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 animate__animated animate__fadeIn">
+            <i class="fas fa-exclamation-circle me-2"></i> {{ session('error') }}
         </div>
     @endif
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
+    {{-- ========================= GIAO DIỆN SÂN THỂ THAO ========================= --}}
+    @if($facility->category->type == 'sport')
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card booking-card shadow-lg">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 text-primary fw-bold"><i class="fas fa-clock me-2"></i>Chọn khung giờ đặt sân</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ route('booking.form.multiple') }}" method="POST">
+                        @csrf
 
-                <form action="{{ route('booking.form.multiple') }}" method="POST">
-                    @csrf
+                        <div class="row g-4 mb-4">
+                            {{-- CHỌN NGÀY --}}
+                            <div class="col-md-4">
+                                <label class="form-label">Ngày đặt sân</label>
+                                <div class="input-group shadow-sm rounded">
+                                    <span class="input-group-text bg-white border-end-0"><i class="far fa-calendar-alt text-primary"></i></span>
+                                    <input type="date" id="booking_date" class="form-control border-start-0" min="{{ date('Y-m-d') }}">
+                                </div>
+                            </div>
 
-                    <table class="table table-bordered text-center align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Thứ</th>
-                                <th>Ngày</th>
-                                <th>Sáng <br> (7h - 11h)</th>
-                                <th>Chiều <br> (13h - 17h)</th>
-                                <th>Tối <br> (17h - 21h)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                            {{-- GIỜ BẮT ĐẦU --}}
+                            <div class="col-md-3">
+                                <label class="form-label">Giờ bắt đầu</label>
+                                <select id="start_time" class="form-select shadow-sm">
+                                    <option value="">--:--</option>
+                                    @for($h = 7; $h <= 21; $h++)
+                                        <option value="{{ sprintf('%02d:00', $h) }}">{{ sprintf('%02d:00', $h) }}</option>
+                                        @if($h < 21)
+                                            <option value="{{ sprintf('%02d:30', $h) }}">{{ sprintf('%02d:30', $h) }}</option>
+                                        @endif
+                                    @endfor
+                                </select>
+                            </div>
 
-@foreach($weekDays as $day)
-<tr>
-    <td class="fw-bold">{{ ucwords($day['date']->locale('vi')->isoFormat('dddd')) }}</td>
-    <td>{{ $day['date']->format('d-m-Y') }}</td>
+                            {{-- GIỜ KẾT THÚC --}}
+                            <div class="col-md-3">
+                                <label class="form-label">Giờ kết thúc</label>
+                                <select id="end_time" class="form-select shadow-sm">
+                                    <option value="">--:--</option>
+                                    @for($h = 7; $h <= 21; $h++)
+                                        <option value="{{ sprintf('%02d:00', $h) }}">{{ sprintf('%02d:00', $h) }}</option>
+                                        @if($h < 21)
+                                            <option value="{{ sprintf('%02d:30', $h) }}">{{ sprintf('%02d:30', $h) }}</option>
+                                        @endif
+                                    @endfor
+                                </select>
+                            </div>
 
-    {{-- ===== SÁNG ===== --}}
-
-<td>
-    @php $slot = $day['morning']; @endphp
-
-
-@if($slot && $slot->status != 'cancelled')
-
-    @if($slot->status == 'locked')
-
-        @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-            <form action="{{ route('admin.booking.unlock') }}" method="POST">
-                @csrf
-                <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-                <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-                <input type="hidden" name="session" value="morning">
-
-                <button class="btn btn-dark btn-sm">🔓 Mở khóa</button>
-            </form>
-        @else
-            <span class="badge bg-dark px-3 py-2">Đã khóa</span>
-        @endif
-
-    @elseif($slot->status == 'approved')
-        <span class="badge bg-danger px-3 py-2">Đã thuê</span>
-
-    @elseif($slot->status == 'pending')
-        <span class="badge bg-warning text-dark px-3 py-2">Chờ duyệt</span>
-
-    @endif
-
-@else
-
-    @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-        <form action="{{ route('admin.booking.lock') }}" method="POST">
-            @csrf
-            <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-            <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-            <input type="hidden" name="session" value="morning">
-
-            <button class="btn btn-warning btn-sm">Khóa sân</button>
-        </form>
-    @else
-        <input type="checkbox"
-            name="bookings[]"
-            value="{{ $facility->id }}|{{ $day['date']->format('Y-m-d') }}|morning">
-    @endif
-
-@endif
-
-<div class="small text-muted mt-1">
-    {{ number_format($facility->category->price_morning) }} VNĐ
-</div>
-
-
-</td>
-
-{{-- ===== CHIỀU ===== --}}
-
-<td>
-    @php $slot = $day['afternoon']; @endphp
-
-
-@if($slot && $slot->status != 'cancelled')
-
-    @if($slot->status == 'locked')
-
-        @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-            <form action="{{ route('admin.booking.unlock') }}" method="POST">
-                @csrf
-                <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-                <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-                <input type="hidden" name="session" value="afternoon">
-
-                <button class="btn btn-dark btn-sm">🔓 Mở khóa</button>
-            </form>
-        @else
-            <span class="badge bg-dark px-3 py-2">Đã khóa</span>
-        @endif
-
-    @elseif($slot->status == 'approved')
-        <span class="badge bg-danger px-3 py-2">Đã thuê</span>
-
-    @elseif($slot->status == 'pending')
-        <span class="badge bg-warning text-dark px-3 py-2">Chờ duyệt</span>
-
-    @endif
-
-@else
-
-    @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-        <form action="{{ route('admin.booking.lock') }}" method="POST">
-            @csrf
-            <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-            <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-            <input type="hidden" name="session" value="afternoon">
-
-            <button class="btn btn-warning btn-sm">Khóa sân</button>
-        </form>
-    @else
-        <input type="checkbox"
-            name="bookings[]"
-            value="{{ $facility->id }}|{{ $day['date']->format('Y-m-d') }}|afternoon">
-    @endif
-
-@endif
-
-<div class="small text-muted mt-1">
-    {{ number_format($facility->category->price_afternoon) }} VNĐ
-</div>
-
-
-</td>
-
-{{-- ===== TỐI ===== --}}
-
-<td>
-    @php $slot = $day['evening']; @endphp
-
-
-@if($slot && $slot->status != 'cancelled')
-
-    @if($slot->status == 'locked')
-
-        @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-            <form action="{{ route('admin.booking.unlock') }}" method="POST">
-                @csrf
-                <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-                <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-                <input type="hidden" name="session" value="evening">
-
-                <button class="btn btn-dark btn-sm">🔓 Mở khóa</button>
-            </form>
-        @else
-            <span class="badge bg-dark px-3 py-2">Đã khóa</span>
-        @endif
-
-    @elseif($slot->status == 'approved')
-        <span class="badge bg-danger px-3 py-2">Đã thuê</span>
-
-    @elseif($slot->status == 'pending')
-        <span class="badge bg-warning text-dark px-3 py-2">Chờ duyệt</span>
-
-    @endif
-
-@else
-
-    @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-        <form action="{{ route('admin.booking.lock') }}" method="POST">
-            @csrf
-            <input type="hidden" name="facility_id" value="{{ $facility->id }}">
-            <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
-            <input type="hidden" name="session" value="evening">
-
-            <button class="btn btn-warning btn-sm">Khóa sân</button>
-        </form>
-    @else
-        <input type="checkbox"
-            name="bookings[]"
-            value="{{ $facility->id }}|{{ $day['date']->format('Y-m-d') }}|evening">
-    @endif
-
-@endif
-
-<div class="small text-muted mt-1">
-    {{ number_format($facility->category->price_evening) }} VNĐ
-</div>
-
-
-</td>
-
-    </td>
-
-</tr>
-@endforeach
-
-                        </tbody>
-                    </table>
-
-                    @unless(Auth::check() && Auth::user()->vai_tro == 'admin')
-                        <div class="text-center mt-3">
-                            <button type="submit" class="btn btn-success px-4"
-                                onclick="if(document.querySelectorAll('input[name=\'bookings[]\']:checked').length == 0){ alert('Chọn ít nhất 1 ca!'); return false; }">
-                                Đặt lịch
-                            </button>
+                            {{-- NÚT THÊM --}}
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-primary w-100 btn-action shadow-sm" onclick="addSlot()">
+                                    <i class="fas fa-plus"></i> Thêm
+                                </button>
+                            </div>
                         </div>
-                    @endunless
 
-                </form>
+                        {{-- DANH SÁCH SLOT --}}
+                        <div id="slotList" class="mb-4"></div>
+                        <div id="hiddenInputs"></div>
 
+                        <div class="d-flex flex-column align-items-center bg-light p-3 rounded-4 mb-4 shadow-sm border">
+                            <span class="text-muted small fw-bold text-uppercase mb-1">Đơn giá tham khảo</span>
+                            <div class="price-text fw-bold">
+                                {{ number_format($facility->category->price_hour) }} VNĐ <span class="text-muted small">/ giờ</span>
+                            </div>
+                        </div>
+
+                        <div class="text-center d-flex justify-content-center gap-3">
+                            @unless(Auth::check() && Auth::user()->vai_tro == 'admin')
+                                <button type="submit" class="btn btn-success btn-action px-5 py-2 shadow" onclick="submitForm(event, 'book')">
+                                    <i class="fas fa-shopping-cart me-2"></i>Xác nhận đặt sân
+                                </button>
+                            @endunless
+
+                            @if(Auth::check() && Auth::user()->vai_tro == 'admin')
+                                <button type="submit" class="btn btn-warning btn-action px-5 py-2 shadow" onclick="submitForm(event, 'lock')">
+                                    <i class="fas fa-lock me-2"></i>Khóa sân ngay
+                                </button>
+                            @endif
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+
+    {{-- JS của bạn giữ nguyên --}}
+    <script>
+        let slots = [];
+        function toMinutes(time) { let [h, m] = time.split(':').map(Number); return h * 60 + m; }
+        function isOverlap(aStart, aEnd, bStart, bEnd) { return toMinutes(aStart) < toMinutes(bEnd) && toMinutes(aEnd) > toMinutes(bStart); }
+        
+        function addSlot() {
+            let date = document.getElementById('booking_date').value;
+            let start = document.getElementById('start_time').value;
+            let end = document.getElementById('end_time').value;
+            if (!date) { alert('Vui lòng chọn ngày!'); return; }
+            if (!start || !end) { alert('Vui lòng nhập giờ!'); return; }
+            if (toMinutes(start) >= toMinutes(end)) { alert('Giờ không hợp lệ!'); return; }
+            for (let s of slots) { if (s.date === date && isOverlap(start, end, s.start, s.end)) { alert('Khung giờ bị trùng!'); return; } }
+            slots.push({date, start, end});
+            renderSlots();
+            document.getElementById('start_time').value = '';
+            document.getElementById('end_time').value = '';
+        }
+
+        function renderSlots() {
+            let html = '';
+            slots.forEach((s, i) => {
+                html += `
+                    <div class="slot-item p-3 mb-2 d-flex justify-content-between align-items-center animate__animated animate__fadeInLeft">
+                        <div>
+                            <span class="badge bg-primary me-2"><i class="far fa-calendar-alt"></i> ${s.date}</span>
+                            <span class="fw-bold text-dark"><i class="far fa-clock"></i> ${s.start} - ${s.end}</span>
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm border-0 rounded-circle" onclick="removeSlot(${i})"><i class="fas fa-times"></i></button>
+                    </div>
+                `;
+            });
+            document.getElementById('slotList').innerHTML = html;
+        }
+
+        function removeSlot(index) { slots.splice(index, 1); renderSlots(); }
+
+        function submitForm(e, type = 'book') {
+            let facilityId = "{{ $facility->id }}";
+            let date = document.getElementById('booking_date').value;
+            let start = document.getElementById('start_time').value;
+            let end = document.getElementById('end_time').value;
+            let finalSlots = [...slots];
+            if (date && start && end) {
+                if (toMinutes(start) >= toMinutes(end)) { alert('Giờ không hợp lệ!'); e.preventDefault(); return; }
+                for (let s of finalSlots) { if (s.date === date && isOverlap(start, end, s.start, s.end)) { alert('Khung giờ bị trùng!'); e.preventDefault(); return; } }
+                finalSlots.push({date, start, end});
+            }
+            if (finalSlots.length === 0) { alert('Bạn chưa chọn khung giờ!'); e.preventDefault(); return; }
+            let container = document.getElementById('hiddenInputs');
+            container.innerHTML = '';
+            finalSlots.forEach(s => {
+                let input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'bookings[]';
+                input.value = facilityId + "|" + s.date + "|" + s.start + "|" + s.end + "|" + type;
+                container.appendChild(input);
+            });
+        }
+    </script>
+
+    {{-- ========================= GIAO DIỆN PHÒNG / CA ========================= --}}
+    @elseif($facility->category->type == 'room')
+    <div class="card booking-card shadow-lg overflow-hidden">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="mb-0 text-primary fw-bold"><i class="fas fa-calendar-week me-2"></i>Lịch đăng ký theo ca</h5>
+        </div>
+        <div class="card-body p-0">
+            <form action="{{ route('booking.form.multiple') }}" method="POST">
+                @csrf
+                <div class="table-responsive">
+                    <table class="table table-modern table-hover align-middle mb-0">
+                        <thead class="text-secondary">
+                            <tr>
+                                <th class="ps-4">Thời gian</th>
+                                <th>Sáng <small class="d-block fw-normal text-muted">(7h - 11h)</small></th>
+                                <th>Chiều <small class="d-block fw-normal text-muted">(13h - 17h)</small></th>
+                                <th>Tối <small class="d-block fw-normal text-muted">(17h - 21h)</small></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($weekDays as $day)
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="fw-bold text-dark">{{ ucwords($day['date']->locale('vi')->isoFormat('dddd')) }}</div>
+                                    <small class="text-muted">{{ $day['date']->format('d/m/Y') }}</small>
+                                </td>
+
+                                @foreach(['morning','afternoon','evening'] as $session)
+                                @php $slot = $day[$session]; @endphp
+                                <td>
+                                    <div class="p-2 rounded-3 border bg-light shadow-sm text-center" style="min-height: 80px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                                        @if($slot && $slot->booking && $slot->booking->status != 'cancelled')
+                                            {{-- LOCK --}}
+                                            @if($slot->booking->status == 'locked')
+                                                @if(Auth::check() && Auth::user()->vai_tro == 'admin')
+                                                    <form action="{{ route('admin.booking.unlock') }}" method="POST">
+                                                        @csrf
+                                                        <input type="hidden" name="facility_id" value="{{ $facility->id }}">
+                                                        <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
+                                                        <input type="hidden" name="session" value="{{ $session }}">
+                                                        <button class="btn btn-dark btn-sm rounded-pill px-3">🔓 Mở khóa</button>
+                                                    </form>
+                                                @else
+                                                    <span class="badge bg-dark badge-status rounded-pill">Đã khóa</span>
+                                                @endif
+                                            {{-- APPROVED / PENDING --}}
+                                            @elseif($slot->booking->status == 'approved')
+                                                <span class="badge bg-danger badge-status rounded-pill">Đã thuê</span>
+                                            @elseif($slot->booking->status == 'pending')
+                                                <span class="badge bg-warning text-dark badge-status rounded-pill">Chờ duyệt</span>
+                                            @endif
+                                        @else
+                                            {{-- SLOT TRỐNG --}}
+                                            @if(Auth::check() && Auth::user()->vai_tro == 'admin')
+                                                <form action="{{ route('admin.booking.lock') }}" method="POST">
+                                                    @csrf
+                                                    <input type="hidden" name="facility_id" value="{{ $facility->id }}">
+                                                    <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
+                                                    <input type="hidden" name="session" value="{{ $session }}">
+                                                    <button class="btn btn-outline-warning btn-sm border-2 fw-bold px-3 rounded-pill">Khóa</button>
+                                                </form>
+                                            @else
+                                                <input type="checkbox" name="bookings[]" class="form-check-input mb-1" 
+                                                       value="{{ $facility->id }}|{{ $day['date']->format('Y-m-d') }}|{{ $session }}">
+                                                <div class="x-small text-muted mt-1" style="font-size: 0.7rem;">Sẵn sàng</div>
+                                            @endif
+                                        @endif
+
+                                        {{-- GIÁ --}}
+                                        <div class="fw-bold text-success mt-1 small">
+                                            @if($session == 'morning') {{ number_format($facility->category->price_morning) }}đ
+                                            @elseif($session == 'afternoon') {{ number_format($facility->category->price_afternoon) }}đ
+                                            @else {{ number_format($facility->category->price_evening) }}đ @endif
+                                        </div>
+                                    </div>
+                                </td>
+                                @endforeach
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                @unless(Auth::check() && Auth::user()->vai_tro == 'admin')
+                <div class="card-footer bg-white border-0 text-center py-4">
+                    <button type="submit" class="btn btn-success btn-action px-5 py-2 shadow"
+                            onclick="if(document.querySelectorAll('input[name=\'bookings[]\']:checked').length == 0){ alert('Chọn ít nhất 1 ca!'); return false; }">
+                        <i class="fas fa-check-double me-2"></i>Tiến hành đặt lịch
+                    </button>
+                </div>
+                @endunless
+            </form>
+        </div>
+    </div>
+    @endif
 
 </div>
 
