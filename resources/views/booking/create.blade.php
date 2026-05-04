@@ -2,7 +2,6 @@
 
 @section('content')
 
-{{-- Tùy chỉnh CSS nhanh để làm mượt giao diện --}}
 <style>
     .booking-card { border-radius: 15px; border: none; }
     .table-modern thead { background-color: #f8f9fa; }
@@ -128,66 +127,205 @@
 
     {{-- JS của bạn giữ nguyên --}}
     <script>
-        let slots = [];
-        function toMinutes(time) { let [h, m] = time.split(':').map(Number); return h * 60 + m; }
-        function isOverlap(aStart, aEnd, bStart, bEnd) { return toMinutes(aStart) < toMinutes(bEnd) && toMinutes(aEnd) > toMinutes(bStart); }
-        
-        function addSlot() {
-            let date = document.getElementById('booking_date').value;
-            let start = document.getElementById('start_time').value;
-            let end = document.getElementById('end_time').value;
-            if (!date) { alert('Vui lòng chọn ngày!'); return; }
-            if (!start || !end) { alert('Vui lòng nhập giờ!'); return; }
-            if (toMinutes(start) >= toMinutes(end)) { alert('Giờ không hợp lệ!'); return; }
-            for (let s of slots) { if (s.date === date && isOverlap(start, end, s.start, s.end)) { alert('Khung giờ bị trùng!'); return; } }
-            slots.push({date, start, end});
-            renderSlots();
-            document.getElementById('start_time').value = '';
+let slots = [];
+let isChecking = false;
+
+function toMinutes(time) {
+    if(!time) return 0;
+    let [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+}
+
+function isOverlap(aStart, aEnd, bStart, bEnd) {
+    return toMinutes(aStart) < toMinutes(bEnd) &&
+           toMinutes(aEnd) > toMinutes(bStart);
+}
+
+// =======================
+// CHECK TRÙNG DATABASE
+// =======================
+async function checkDatabaseConflict(date, start, end) {
+    let facilityId = "{{ $facility->id }}";
+    try {
+        let res = await fetch(`/check-slot?facility_id=${facilityId}&date=${date}&start=${start}&end=${end}`);
+        let data = await res.json();
+        return data.conflict;
+    } catch (e) {
+        console.error("Lỗi check database:", e);
+        return false;
+    }
+}
+
+// =======================
+// REALTIME CHECK (Khi người dùng thay đổi input)
+// =======================
+async function checkRealtime() {
+    let date = document.getElementById('booking_date').value;
+    let start = document.getElementById('start_time').value;
+    let end = document.getElementById('end_time').value;
+
+    if (!date || !start || !end) return;
+
+    if (toMinutes(start) >= toMinutes(end)) {
+        alert('❌ Giờ kết thúc phải lớn hơn giờ bắt đầu!');
+        document.getElementById('end_time').value = '';
+        return;
+    }
+
+    // Check trùng với các slot đã nhấn "Thêm" ở dưới
+    for (let s of slots) {
+        if (s.date === date && isOverlap(start, end, s.start, s.end)) {
+            alert('❌ Khung giờ này trùng với khung giờ bạn đã thêm vào danh sách bên dưới!');
             document.getElementById('end_time').value = '';
+            return;
         }
+    }
 
-        function renderSlots() {
-            let html = '';
-            slots.forEach((s, i) => {
-                html += `
-                    <div class="slot-item p-3 mb-2 d-flex justify-content-between align-items-center animate__animated animate__fadeInLeft">
-                        <div>
-                            <span class="badge bg-primary me-2"><i class="far fa-calendar-alt"></i> ${s.date}</span>
-                            <span class="fw-bold text-dark"><i class="far fa-clock"></i> ${s.start} - ${s.end}</span>
-                        </div>
-                        <button type="button" class="btn btn-outline-danger btn-sm border-0 rounded-circle" onclick="removeSlot(${i})"><i class="fas fa-times"></i></button>
-                    </div>
-                `;
-            });
-            document.getElementById('slotList').innerHTML = html;
+    if (isChecking) return;
+    isChecking = true;
+
+    let conflict = await checkDatabaseConflict(date, start, end);
+    if (conflict) {
+        alert('❌ Khung giờ này đã có người khác đặt trong hệ thống!');
+        document.getElementById('end_time').value = '';
+    }
+
+    isChecking = false;
+}
+
+// =======================
+// NÚT THÊM SLOT
+// =======================
+async function addSlot() {
+    let date = document.getElementById('booking_date').value;
+    let start = document.getElementById('start_time').value;
+    let end = document.getElementById('end_time').value;
+
+    if (!date || !start || !end) {
+        alert('Vui lòng chọn đầy đủ ngày, giờ bắt đầu và giờ kết thúc!');
+        return;
+    }
+
+    if (toMinutes(start) >= toMinutes(end)) {
+        alert('Giờ không hợp lệ!');
+        return;
+    }
+
+    // Kiểm tra trùng local
+    for (let s of slots) {
+        if (s.date === date && isOverlap(start, end, s.start, s.end)) {
+            alert('Khung giờ trùng với slot đã thêm!');
+            return;
         }
+    }
 
-        function removeSlot(index) { slots.splice(index, 1); renderSlots(); }
+    // Kiểm tra trùng database
+    let conflict = await checkDatabaseConflict(date, start, end);
+    if (conflict) {
+        alert('Khung giờ đã được đặt!');
+        return;
+    }
 
-        function submitForm(e, type = 'book') {
-            let facilityId = "{{ $facility->id }}";
-            let date = document.getElementById('booking_date').value;
-            let start = document.getElementById('start_time').value;
-            let end = document.getElementById('end_time').value;
-            let finalSlots = [...slots];
-            if (date && start && end) {
-                if (toMinutes(start) >= toMinutes(end)) { alert('Giờ không hợp lệ!'); e.preventDefault(); return; }
-                for (let s of finalSlots) { if (s.date === date && isOverlap(start, end, s.start, s.end)) { alert('Khung giờ bị trùng!'); e.preventDefault(); return; } }
-                finalSlots.push({date, start, end});
+    slots.push({ date, start, end });
+    renderSlots();
+
+    // Reset khung chọn giờ (giữ lại ngày để tiện chọn tiếp)
+    document.getElementById('start_time').value = '';
+    document.getElementById('end_time').value = '';
+}
+
+function renderSlots() {
+    let html = '';
+    slots.forEach((s, i) => {
+        html += `
+            <div class="slot-item p-3 mb-2 d-flex justify-content-between align-items-center animate__animated animate__fadeIn">
+                <div>
+                    <span class="badge bg-primary me-2">${s.date}</span>
+                    <span class="fw-bold">${s.start} - ${s.end}</span>
+                </div>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeSlot(${i})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    });
+    document.getElementById('slotList').innerHTML = html;
+}
+
+function removeSlot(index) {
+    slots.splice(index, 1);
+    renderSlots();
+}
+
+// =======================
+// NÚT XÁC NHẬN / KHÓA SÂN
+// =======================
+async function submitForm(e, type = 'book') {
+    e.preventDefault();
+
+    let facilityId = "{{ $facility->id }}";
+    let container = document.getElementById('hiddenInputs');
+    let form = e.target.closest('form');
+    container.innerHTML = '';
+
+    let curDate = document.getElementById('booking_date').value;
+    let curStart = document.getElementById('start_time').value;
+    let curEnd = document.getElementById('end_time').value;
+
+    let hasCurrentInput = curDate && curStart && curEnd;
+    let hasSlotsInList = slots.length > 0;
+
+    // YÊU CẦU: Chỉ thông báo khi cả 2 đều trống
+    if (!hasCurrentInput && !hasSlotsInList) {
+        alert('Vui lòng chọn hoặc thêm ít nhất một khung giờ!');
+        return;
+    }
+
+    // 1. Xử lý các slot đã có trong danh sách (dưới khung chọn)
+    for (let s of slots) {
+        let input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'bookings[]';
+        input.value = `${facilityId}|${s.date}|${s.start}|${s.end}|${type}`;
+        container.appendChild(input);
+    }
+
+    // 2. Xử lý khung giờ đang chọn ở trên (nếu có và chưa nhấn Thêm)
+    if (hasCurrentInput) {
+        // Kiểm tra trùng với danh sách bên dưới
+        for (let s of slots) {
+            if (s.date === curDate && isOverlap(curStart, curEnd, s.start, s.end)) {
+                alert('Khung giờ đang chọn trùng với danh sách đã thêm. Vui lòng kiểm tra lại!');
+                container.innerHTML = '';
+                return;
             }
-            if (finalSlots.length === 0) { alert('Bạn chưa chọn khung giờ!'); e.preventDefault(); return; }
-            let container = document.getElementById('hiddenInputs');
-            container.innerHTML = '';
-            finalSlots.forEach(s => {
-                let input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'bookings[]';
-                input.value = facilityId + "|" + s.date + "|" + s.start + "|" + s.end + "|" + type;
-                container.appendChild(input);
-            });
         }
-    </script>
 
+        // Kiểm tra trùng database lần cuối cho khung đang chọn
+        let conflict = await checkDatabaseConflict(curDate, curStart, curEnd);
+        if (conflict) {
+            alert('Khung giờ đang chọn đã được đặt hoặc khóa. Vui lòng chọn giờ khác!');
+            container.innerHTML = '';
+            return;
+        }
+
+        // Nếu hợp lệ thì thêm vào input gửi đi luôn
+        let input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'bookings[]';
+        input.value = `${facilityId}|${curDate}|${curStart}|${curEnd}|${type}`;
+        container.appendChild(input);
+    }
+
+    // Cuối cùng: Submit form
+    form.submit();
+}
+
+// Event listeners
+document.getElementById('booking_date').addEventListener('change', checkRealtime);
+document.getElementById('start_time').addEventListener('change', checkRealtime);
+document.getElementById('end_time').addEventListener('change', checkRealtime);
+</script>
     {{-- ========================= GIAO DIỆN PHÒNG / CA ========================= --}}
     @elseif($facility->category->type == 'room')
     <div class="card booking-card shadow-lg overflow-hidden">

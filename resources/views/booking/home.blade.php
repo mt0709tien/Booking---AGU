@@ -1,6 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
+
+@if(session('success'))
+    <div class="container mt-4">
+        <div class="alert alert-success text-center shadow-sm">
+            {{ session('success') }}
+        </div>
+    </div>
+@endif
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">

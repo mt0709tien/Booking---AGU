@@ -7,7 +7,6 @@
 @endphp
 
 <style>
-/* BIẾN CHIỀU CAO HEADER */
 :root{
     --header-height: 140px;
 }

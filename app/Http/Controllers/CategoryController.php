@@ -116,4 +116,5 @@ class CategoryController extends Controller
         return redirect()->route('admin.categories')
             ->with('success', 'Xóa thành công');
     }
+    
 }

@@ -75,19 +75,21 @@ Route::get('/category/{id}', [CategoryController::class,'show'])
 Route::get('/booking/{facility}', [BookingController::class,'create'])
     ->name('booking.create');
 
+Route::post('/booking/form-multiple', [BookingController::class,'formMultiple'])
+    ->name('booking.form.multiple');
+
+    Route::post('/booking/store-multiple', [BookingController::class,'storeMultiple'])
+    ->name('booking.store.multiple');
+
 Route::middleware('auth')->group(function () {
 
     Route::get('/booking/form/{facility}', [BookingController::class,'form'])
         ->name('booking.form');
 
-    Route::post('/booking/form-multiple', [BookingController::class,'formMultiple'])
-        ->name('booking.form.multiple');
 
     Route::post('/booking/store', [BookingController::class,'store'])
         ->name('booking.store');
 
-    Route::post('/booking/store-multiple', [BookingController::class,'storeMultiple'])
-        ->name('booking.store.multiple');
 
     Route::get('/my-bookings', [BookingController::class,'myBookings'])
         ->name('booking.my');
@@ -97,6 +99,8 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/booking/unlock', [BookingController::class,'unlock'])
         ->name('admin.booking.unlock');
+    
+        Route::get('/check-slot', [BookingController::class, 'checkSlot']);
 });
 
 
@@ -287,4 +291,10 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 
 Route::post('/admin/lock-sport', [AdminController::class, 'lockSport'])
     ->name('admin.lock.sport');
+
+Route::get('/booking/{id}/review', [BookingController::class, 'review'])
+    ->name('booking.review');
+
+Route::post('/booking/{id}/review', [BookingController::class, 'submitReview'])
+    ->name('booking.review.submit');
 

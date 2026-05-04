@@ -125,7 +125,7 @@ class FacilitySeeder extends Seeder
         */
         $classroom = Category::where('name','Phòng học')->firstOrFail();
 
-        foreach(['A','B','C','D'] as $block){
+        foreach(['Phòng A','Phòng B','Phòng C','Phòng D'] as $block){
             for($i=101;$i<=109;$i++){
                 Facility::create([
                     'category_id'=>$classroom->id,

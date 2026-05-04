@@ -220,7 +220,7 @@ class BookingController extends Controller
         // =========================
         $booking = Booking::create([
             'group_id' => $groupId,
-            'user_id' => auth()->id(),
+            'user_id' => auth()->check() ? auth()->id() : null,
             'fullname' => $request->fullname,
             'phone' => $request->phone,
             'price' => $totalPrice,
@@ -250,8 +250,13 @@ class BookingController extends Controller
             }
         }
 
-        return redirect()->route('booking.my')
-            ->with('success', 'Đặt lịch thành công!');
+        if (auth()->check()) {
+            return redirect()->route('booking.my')
+                ->with('success', 'Đặt lịch thành công!');
+        }
+        
+        return redirect()->route('booking.home')
+            ->with('success', 'Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
     });
 }
     /*
@@ -348,6 +353,37 @@ public function index(Request $request)
     $bookings = $query->latest()->get();
 
     return view('admin.booking.index', compact('bookings'));
+}
+public function review($id)
+{
+    $booking = Booking::findOrFail($id);
+    return view('booking.review', compact('booking'));
+}
+
+public function submitReview(Request $request, $id)
+{
+    $request->validate([
+        'rating' => 'required|min:1|max:5',
+        'comment' => 'nullable|max:500'
+    ]);
+
+    return redirect()->route('booking.my')
+        ->with('success', 'Cảm ơn bạn đã gửi đánh giá.');
+}
+public function checkSlot(Request $request)
+{
+    $exists = SportBooking::where('facility_id', $request->facility_id)
+        ->whereDate('booking_date', $request->date)
+        ->whereHas('booking', function ($q) {
+            $q->whereIn('status', ['pending','approved','locked']);
+        })
+        ->where(function ($q) use ($request) {
+            $q->where('start_time', '<', $request->end)
+              ->where('end_time', '>', $request->start);
+        })
+        ->exists();
+
+    return response()->json(['conflict' => $exists]);
 }
 
 }

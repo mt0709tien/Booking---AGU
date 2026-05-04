@@ -27,7 +27,7 @@
                         <th>Tổng tiền</th>
                         <th>Trạng thái</th>
                         <th>Ngày tạo</th>
-                        <th>Hành động</th>
+                        <th>xem chi tiết</th>
                     </tr>
                 </thead>
 

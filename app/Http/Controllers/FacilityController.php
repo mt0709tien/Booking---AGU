@@ -9,17 +9,27 @@ use App\Models\Category;
 class FacilityController extends Controller
 {
 
-    // Danh sách
-    public function index()
-    {
-        $facilities = Facility::with('category')
-    ->withCount('roomBookings')
-    ->withCount('sportBookings')
-    ->latest()
-    ->get();
+    public function index(Request $request)
+{
+    $categories = Category::with(['facilities' => function ($query) use ($request) {
 
-        return view('facilities.index', compact('facilities'));
-    }
+        $query->withCount('roomBookings')
+              ->withCount('sportBookings');
+
+        // tìm theo tên cơ sở vật chất
+        if ($request->keyword) {
+            $query->where('name', 'like', '%' . $request->keyword . '%');
+        }
+
+        // lọc theo danh mục
+        if ($request->category) {
+            $query->where('category_id', $request->category);
+        }
+
+    }])->get();
+
+    return view('facilities.index', compact('categories'));
+}
 
     // Form thêm
     public function create()

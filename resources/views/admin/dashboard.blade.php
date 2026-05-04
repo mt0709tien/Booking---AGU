@@ -11,176 +11,98 @@
 
     <div class="row g-4">
 
-
         {{-- Quản lý danh mục --}}
         <div class="col-md-4">
             <div class="card shadow h-100 border-danger">
                 <div class="card-body text-center d-flex flex-column">
-
-                    <h5 class="card-title fw-bold mb-3">
-                        Quản lý danh mục
-                    </h5>
-
-                    <p class="text-muted mb-4">
-                        Thêm, sửa, xoá danh mục như
-                        sân bóng, phòng học, hội trường...
-                    </p>
-
-                    <a href="{{ route('admin.categories') }}"
-                       class="btn btn-danger mt-auto">
-                       Quản lý
+                    <h5 class="card-title fw-bold mb-3">Quản lý danh mục</h5>
+                    <p class="text-muted mb-4">Thêm, sửa, xoá danh mục như sân bóng, phòng học, hội trường...</p>
+                    <a href="{{ route('admin.categories') }}" class="btn btn-danger mt-auto">
+                    <i class="bi bi-arrow-left-circle-fill fs-4"></i>
                     </a>
-
                 </div>
             </div>
         </div>
-
 
         {{-- Quản lý cơ sở vật chất --}}
         <div class="col-md-4">
             <div class="card shadow h-100 border-danger">
                 <div class="card-body text-center d-flex flex-column">
-
-                    <h5 class="card-title fw-bold mb-3">
-                        Quản lý cơ sở vật chất
-                    </h5>
-
-                    <p class="text-muted mb-4">
-                        Thêm, sửa, xoá các cơ sở vật chất
-                        như sân bóng, phòng học, phòng máy...
-                    </p>
-
-                    <a href="{{ route('admin.facilities') }}"
-                       class="btn btn-danger mt-auto">
-                       Quản lý
+                    <h5 class="card-title fw-bold mb-3">Quản lý cơ sở vật chất</h5>
+                    <p class="text-muted mb-4">Thêm, sửa, xoá các cơ sở vật chất như sân bóng, phòng học, phòng máy...</p>
+                    <a href="{{ route('admin.facilities') }}" class="btn btn-danger mt-auto">
+                        <i class="bi bi-arrow-left-circle-fill fs-4"></i>
                     </a>
-
                 </div>
             </div>
         </div>
 
-         {{--  QUẢN LÝ HÓA ĐƠN --}}
+        {{-- QUẢN LÝ HÓA ĐƠN --}}
         <div class="col-md-4">
             <div class="card shadow h-100 border-danger">
                 <div class="card-body text-center d-flex flex-column">
-                    <h5 class="card-title fw-bold mb-3">
-                        Quản lý hóa đơn
-                    </h5>
-
-                    <p class="text-muted mb-4">
-                        Xem, tạo và quản lý các hóa đơn
-                        thanh toán của người dùng.
-                    </p>
-
-                    <a href="{{ route('admin.invoices') }}"
-                       class="btn btn-danger mt-auto">
-                       Quản lý
+                    <h5 class="card-title fw-bold mb-3">Quản lý hóa đơn</h5>
+                    <p class="text-muted mb-4">Xem, tạo và quản lý các hóa đơn thanh toán của người dùng.</p>
+                    <a href="{{ route('admin.invoices') }}" class="btn btn-danger mt-auto">
+                    <i class="bi bi-arrow-left-circle-fill fs-4"></i>
                     </a>
                 </div>
             </div>
         </div>
-
-
 
         {{-- Quản lý người dùng --}}
         <div class="col-md-4">
             <div class="card shadow h-100 border-danger">
                 <div class="card-body text-center d-flex flex-column">
-
-                    <h5 class="card-title fw-bold mb-3">
-                        Quản lý người dùng
-                    </h5>
-
-                    <p class="text-muted mb-4">
-                        Xem danh sách, chỉnh sửa hoặc xoá
-                        tài khoản người dùng.
-                    </p>
-
-                    <a href="{{ route('admin.users') }}"
-                       class="btn btn-danger mt-auto">
-                       Quản lý
+                    <h5 class="card-title fw-bold mb-3">Quản lý người dùng</h5>
+                    <p class="text-muted mb-4">Xem danh sách, chỉnh sửa hoặc xoá tài khoản người dùng.</p>
+                    <a href="{{ route('admin.users') }}" class="btn btn-danger mt-auto">
+                    <i class="bi bi-arrow-left-circle-fill fs-4"></i>
                     </a>
-
                 </div>
             </div>
         </div>
-
 
         {{-- Danh sách đặt lịch --}}
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card shadow h-100 border-danger">
                 <div class="card-body text-center d-flex flex-column">
-
-                    <h5 class="card-title fw-bold mb-3">
-                        Danh sách đặt lịch
-                    </h5>
-
-                    <p class="text-muted mb-4">
-                        Xem toàn bộ lịch đặt
-                        của người dùng.
-                    </p>
-
-                    <a href="{{ route('admin.bookings') }}"
-                       class="btn btn-danger mt-auto">
-                       Xem danh sách
+                    <h5 class="card-title fw-bold mb-3">Danh sách đặt lịch</h5>
+                    <p class="text-muted mb-4">Xem toàn bộ lịch đặt của người dùng.</p>
+                    <a href="{{ route('admin.bookings') }}" class="btn btn-danger mt-auto">
+                    <i class="bi bi-arrow-left-circle-fill fs-4"></i>
                     </a>
-
                 </div>
             </div>
         </div>
-
 
         {{-- Thống kê --}}
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card shadow h-100 border-danger">
                 <div class="card-body text-center d-flex flex-column">
-
-                    <h5 class="card-title fw-bold mb-3">
-                        Thống kê
-                    </h5>
-
-                    <p class="text-muted mb-4">
-                        Xem báo cáo và thống kê
-                        số lượt sử dụng.
-                    </p>
-
-                    <a href="{{ route('admin.stats') }}"
-                       class="btn btn-danger mt-auto">
-                       Xem thống kê
+                    <h5 class="card-title fw-bold mb-3">Thống kê</h5>
+                    <p class="text-muted mb-4">Xem báo cáo và thống kê số lượt sử dụng.</p>
+                    <a href="{{ route('admin.stats') }}" class="btn btn-danger mt-auto">
+                    <i class="bi bi-arrow-left-circle-fill fs-4"></i>
                     </a>
-
-</div>
-            </div>
-        </div>
-
-
-        
-        {{-- Báo Cáo doanh số --}}
-        <div class="col-md-6">
-            <div class="card shadow h-100 border-danger">
-                <div class="card-body text-center d-flex flex-column">
-
-                    <h5 class="card-title fw-bold mb-3">
-                        Báo cáo doanh số
-                    </h5>
-
-                    <p class="text-muted mb-4">
-                        Xem báo cáo doanh số ngày, tháng, năm
-                        
-                    </p>
-
-                    <a href="{{ route('admin.report') }}"
-                       class="btn btn-danger mt-auto">
-                       Xem báo cáo
-                    </a>
-
                 </div>
             </div>
         </div>
 
+        {{-- Báo Cáo doanh số --}}
+        <div class="col-md-4">
+            <div class="card shadow h-100 border-danger">
+                <div class="card-body text-center d-flex flex-column">
+                    <h5 class="card-title fw-bold mb-3">Báo cáo doanh số</h5>
+                    <p class="text-muted mb-4">Xem báo cáo doanh số ngày, tháng, năm</p>
+                    <a href="{{ route('admin.report') }}" class="btn btn-danger mt-auto">
+                    <i class="bi bi-arrow-left-circle-fill fs-4"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
 
     </div>
-
 </div>
 
 @endsection

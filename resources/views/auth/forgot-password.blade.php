@@ -1,66 +1,94 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Quên mật khẩu</title>
+@extends('layouts.app')
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+@section('content')
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #e6f2ff, #ffffff);
-        }
+<style>
+    .bg-blur {
+        position: fixed;
+        inset: 0;
+        background: url('{{ asset("images/AGU.jpg") }}') no-repeat center center/cover;
+        z-index: -2;
+        transform: scale(1.1);
+    }
 
-        .card {
-            border-radius: 16px;
-        }
+    .bg-overlay {
+        position: fixed;
+        inset: 0;
+        backdrop-filter: blur(8px);
+        background: rgba(15, 23, 42, 0.45);
+        z-index: -1;
+    }
 
-        .icon-box {
-            width: 70px;
-            height: 70px;
-            background: #e7f1ff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: auto;
-            font-size: 30px;
-        }
+    .forgot-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
 
-        .btn-main {
-            background: #0d6efd;
-            border: none;
-            font-weight: 600;
-        }
+    .forgot-card {
+        width: 100%;
+        max-width: 450px;
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        padding: 35px;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+        text-align: center;
+        transition: 0.3s;
+    }
 
-        .btn-main:hover {
-            background: #0b5ed7;
-        }
-    </style>
-</head>
+    .forgot-card:hover {
+        transform: translateY(-6px);
+    }
 
-<body class="d-flex align-items-center justify-content-center vh-100">
+    .icon-box {
+        width: 80px;
+        height: 80px;
+        margin: auto;
+        border-radius: 50%;
+        background: #e7f1ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 34px;
+    }
 
-<div class="col-md-5">
+    .btn-main {
+        background: linear-gradient(135deg,#3b82f6,#2563eb);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-weight: 600;
+        padding: 12px;
+        transition: 0.3s;
+    }
 
-    <div class="card shadow text-center p-4">
+    .btn-main:hover {
+        transform: scale(1.02);
+        filter: brightness(1.05);
+    }
+</style>
 
-        {{-- ICON --}}
-        <div class="icon-box mb-3">
+<div class="bg-blur"></div>
+<div class="bg-overlay"></div>
+
+<div class="forgot-wrapper">
+    <div class="forgot-card">
+        
+        <div class="icon-box mb-4">
             🔐
         </div>
 
-        {{-- TITLE --}}
         <h4 class="fw-bold text-primary mb-3">
             Quên mật khẩu
         </h4>
 
-        {{-- TEXT --}}
-        <p class="text-muted">
+        <p class="text-muted mb-4">
             Vui lòng liên hệ <strong>Admin</strong> để được cấp lại mật khẩu.
         </p>
 
-        {{-- CONTACT --}}
         <div class="bg-light rounded p-3 mb-4">
             <div class="mb-2">
                 📞 <strong>0373276510</strong>
@@ -70,16 +98,13 @@
             </div>
         </div>
 
-        {{-- BUTTON --}}
         <div class="d-grid">
-            <a href="{{ route('login') }}" class="btn btn-main py-2">
+            <a href="{{ route('login') }}" class="btn btn-main">
                 ← Quay lại đăng nhập
             </a>
         </div>
 
     </div>
-
 </div>
 
-</body>
-</html>
+@endsection

@@ -156,30 +156,42 @@
 
                                 {{-- HÀNH ĐỘNG --}}
                                 <td>
-                                    <div class="d-flex flex-column align-items-center gap-1">
-                                        @if(!$booking->is_paid 
-                                            && $booking->payment_method == 'transfer'
-                                            && $booking->status != 'cancelled')
-                                            <a href="{{ route('booking.payment', $booking->id) }}"
-                                               class="btn btn-sm btn-outline-success w-100">
-                                                <i class="fas fa-credit-card me-1"></i> Thanh toán
-                                            </a>
-                                        @endif
+    <div class="d-flex flex-column align-items-center gap-1">
 
-                                        @if($booking->status == 'pending')
-                                            <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" class="w-100">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-outline-danger w-100"
-                                                        onclick="return confirm('Bạn chắc chắn muốn hủy yêu cầu này?')">
-                                                    <i class="fas fa-trash-alt me-1"></i> Hủy
-                                                </button>
-                                            </form>
-                                        @else
-                                            <span class="text-muted small">N/A</span>
-                                        @endif
-                                    </div>
-                                </td>
+        {{-- nút thanh toán --}}
+        @if(!$booking->is_paid 
+            && $booking->payment_method == 'transfer'
+            && $booking->status != 'cancelled')
+            <a href="{{ route('booking.payment', $booking->id) }}"
+               class="btn btn-sm btn-outline-success w-100">
+                <i class="fas fa-credit-card me-1"></i> Thanh toán
+            </a>
+        @endif
+
+        {{-- chờ duyệt -> hủy --}}
+        @if($booking->status == 'pending')
+            <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" class="w-100">
+                @csrf
+                @method('DELETE')
+                <button class="btn btn-sm btn-outline-danger w-100"
+                        onclick="return confirm('Bạn chắc chắn muốn hủy yêu cầu này?')">
+                    <i class="fas fa-trash-alt me-1"></i> Hủy
+                </button>
+            </form>
+
+        {{-- đã duyệt -> đánh giá --}}
+        @elseif($booking->status == 'approved')
+            <a href="{{ route('booking.review', $booking->id) }}"
+               class="btn btn-sm btn-outline-primary w-100">
+                <i class="fas fa-star me-1"></i> Đánh giá
+            </a>
+
+        @else
+            <span class="text-muted small">N/A</span>
+        @endif
+
+    </div>
+</td>
                             </tr>
                         @empty
                             <tr>
