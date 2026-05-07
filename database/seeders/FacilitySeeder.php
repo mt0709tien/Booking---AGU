@@ -102,7 +102,7 @@ class FacilitySeeder extends Seeder
                 'category_id'=>$hall300->id,
                 'name'=>$name,
                 'description'=>'Hội trường 300 chỗ',
-                'image'=>'HT.jpg'
+                'image'=>'HT300.jpg'
             ]);
         }
 
@@ -113,7 +113,7 @@ class FacilitySeeder extends Seeder
                 'category_id'=>$hall150->id,
                 'name'=>$name,
                 'description'=>'Hội trường 150 chỗ',
-                'image'=>'HT.jpg'
+                'image'=>'HT150.jpg'
             ]);
         }
 
@@ -130,7 +130,7 @@ class FacilitySeeder extends Seeder
                 Facility::create([
                     'category_id'=>$classroom->id,
                     'name'=>$block.$i,
-                    'description'=>'Phòng học nhà '.$block,
+                    'description'=>'Phòng học nhà '.$block, 
                     'image'=>'PH.jpg'
                 ]);
             }

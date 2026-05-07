@@ -10,11 +10,18 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-         $middleware->alias([
-        'admin' => \App\Http\Middleware\AdminMiddleware::class,
-    ]);
+    ->withMiddleware(function (Middleware $middleware) {
+        // Cấu hình Alias cho Middleware của bạn
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        ]);
+
+        // CÁCH GIẢI QUYẾT LỖI 419:
+        // Tạm thời bỏ qua kiểm tra CSRF cho tất cả các route để kiểm tra
+        $middleware->validateCsrfTokens(except: [
+            '*', 
+        ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
+    ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();

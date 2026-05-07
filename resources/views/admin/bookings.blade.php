@@ -163,6 +163,9 @@
     @elseif($booking->status == 'rejected')
         <span class="badge bg-danger">Từ chối</span>
 
+    @elseif($booking->status == 'cancel_requested')
+    <span class="badge bg-warning text-dark">Yêu cầu hủy</span>
+
     @elseif($booking->status == 'cancelled')
         <span class="badge bg-secondary">Đã hủy</span>
 
@@ -189,24 +192,33 @@
 
 @if($booking->status == 'pending' && !$isAdmin)
 
-    <a href="{{ route('admin.booking.approve',$booking->id) }}"
+    <a href="{{ route('admin.booking.approve', $booking->id) }}"
        class="btn btn-success btn-sm">✔️ Duyệt</a>
 
-    <a href="{{ route('admin.booking.reject',$booking->id) }}"
+    <a href="{{ route('admin.booking.reject', $booking->id) }}"
        class="btn btn-danger btn-sm"
        onclick="return confirm('Bạn có chắc muốn từ chối?')">❌ Từ chối</a>
+
+@elseif($booking->status == 'cancel_requested')
+
+    <a href="{{ route('admin.booking.approveCancel', $booking->id) }}"
+       class="btn btn-success btn-sm"
+       onclick="return confirm('Đồng ý hủy booking này?')">
+        ✔️ Đồng ý hủy
+    </a>
+    <a href="{{ route('admin.booking.rejectCancel', $booking->id) }}"
+       class="btn btn-danger btn-sm"
+       onclick="return confirm('Từ chối yêu cầu hủy?')">
+        ❌ Giữ booking
+    </a>
 
 @elseif($booking->status == 'locked')
 
     <form action="{{ route('admin.booking.unlock') }}" method="POST" style="display:inline;">
         @csrf
-
-        {{-- 🔥 SỬA INPUT --}}
         <input type="hidden" name="session" value="{{ $firstRoom->session ?? '' }}">
-<input type="hidden" name="start_time" value="{{ $firstSport->start_time ?? '' }}">
-<input type="hidden" name="end_time" value="{{ $firstSport->end_time ?? '' }}">
-         <input type="hidden" name="start_time" value="{{ $sport->start_time ?? '' }}">
-<input type="hidden" name="end_time" value="{{ $sport->end_time ?? '' }}">
+        <input type="hidden" name="start_time" value="{{ $firstSport->start_time ?? '' }}">
+        <input type="hidden" name="end_time" value="{{ $firstSport->end_time ?? '' }}">
 
         <button class="btn btn-dark btn-sm"
             onclick="return confirm('Mở khóa?')">
@@ -245,6 +257,8 @@
     <span class="text-muted">Đã xử lý</span>
 
 @endif
+
+
 
 </td>
 

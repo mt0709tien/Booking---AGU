@@ -20,32 +20,28 @@ class AuthController extends Controller
 
     // Xử lý login
     public function login(Request $request)
-    {
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required'
+    ],[
+        'email.email' => 'Email phải có dấu @'
+    ]);
 
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ],[
-            'email.email' => 'Email phải có dấu @'
-        ]);
+    $credentials = $request->only('email', 'password');
 
-        $credentials = $request->only('email', 'password');
+    if (Auth::attempt($credentials)) {
+        $request->session()->regenerate();
 
-        if (Auth::attempt($credentials)) {
-
-            $request->session()->regenerate();
-
-            if (Auth::user()->vai_tro === 'admin') {
-                return redirect()->route('admin.dashboard');
-            }
-
-            return redirect()->route('booking.home');
+        if (Auth::user()->vai_tro === 'admin') {
+            return redirect()->route('admin.dashboard');
         }
 
-        return back()->with('error','Sai email hoặc mật khẩu');
+        return redirect()->route('booking.home');
     }
 
-
+    return back()->with('error','Sai email hoặc mật khẩu');
+}
     // Trang đăng ký
     public function register()
     {

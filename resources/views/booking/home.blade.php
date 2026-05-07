@@ -207,38 +207,54 @@
     </div>
 
     {{-- HỘI TRƯỜNG --}}
-    <div class="section-header">
-        <h3><i class="fa-solid fa-building-columns me-2 text-danger"></i>Hội Trường</h3>
-    </div>
+    {{-- HỘI TRƯỜNG --}}
+<div class="section-header">
+    <h3>
+        <i class="fa-solid fa-building-columns me-2 text-danger"></i>
+        Hội Trường
+    </h3>
+</div>
 
-    <div class="row g-4 mb-5">
-        @php
-            $halls = [
-                ['id'=>5,'name'=>'Hội trường 600','desc'=>'Sức chứa tối đa 600 chỗ ngồi'],
-                ['id'=>6,'name'=>'Hội trường 300','desc'=>'Sức chứa tối đa 300 chỗ ngồi'],
-                ['id'=>7,'name'=>'Hội trường 150','desc'=>'Sức chứa tối đa 150 chỗ ngồi'],
-            ];
-        @endphp
+@php
+    $halls = [
+        ['id'=>5,'name'=>'Hội trường 600','desc'=>'Sức chứa tối đa 600 chỗ ngồi','img'=>'images/HT.jpg'],
+        ['id'=>6,'name'=>'Hội trường 300','desc'=>'Sức chứa tối đa 300 chỗ ngồi','img'=>'images/HT300.jpg'],
+        ['id'=>7,'name'=>'Hội trường 150','desc'=>'Sức chứa tối đa 150 chỗ ngồi','img'=>'images/HT150.jpg'],
+    ];
+@endphp
 
-        @foreach($halls as $hall)
-        <div class="col-md-4">
-            <div class="facility-card h-100">
-                <div class="img-container">
-                    <span class="category-label">Hall</span>
-                    <img src="{{ asset('images/HT.jpg') }}" alt="{{ $hall['name'] }}">
-                </div>
-                <div class="icon-circle">🏛️</div>
-                <div class="card-body text-center pt-0">
-                    <h5 class="fw-bold">{{ $hall['name'] }}</h5>
-                    <p class="small text-muted">{{ $hall['desc'] }}</p>
-                    <a href="{{ route('category.show', $hall['id']) }}" class="btn btn-danger btn-reserve">
-                        Đăng ký
-                    </a>
-                </div>
+<div class="row g-4 mb-5">
+    @foreach($halls as $hall)
+    <div class="col-md-4">
+        <div class="facility-card h-100 shadow-sm">
+
+            <div class="img-container position-relative">
+                <span class="category-label">Hall</span>
+                <img 
+                    src="{{ asset($hall['img']) }}" 
+                    alt="{{ $hall['name'] }}" 
+                    class="img-fluid rounded-top"
+                >
             </div>
+
+            <div class="icon-circle">🏛️</div>
+
+            <div class="card-body text-center pt-0">
+                <h5 class="fw-bold">{{ $hall['name'] }}</h5>
+                <p class="small text-muted">{{ $hall['desc'] }}</p>
+
+                <a 
+                    href="{{ route('category.show', $hall['id']) }}" 
+                    class="btn btn-danger btn-reserve w-100"
+                >
+                    Đăng ký
+                </a>
+            </div>
+
         </div>
-        @endforeach
     </div>
+    @endforeach
+</div>
 
     {{-- PHÒNG HỌC & MÁY --}}
     <div class="section-header">

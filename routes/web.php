@@ -100,7 +100,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/booking/unlock', [BookingController::class,'unlock'])
         ->name('admin.booking.unlock');
     
-        Route::get('/check-slot', [BookingController::class, 'checkSlot']);
+       
 });
 
 
@@ -173,6 +173,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
     Route::get('/booking/approve/{id}', [AdminController::class,'approve'])->name('admin.booking.approve');
     Route::get('/booking/reject/{id}', [AdminController::class,'reject'])->name('admin.booking.reject');
+
+    Route::get('/booking/approve-cancel/{id}', [BookingController::class,'approveCancel'])
+    ->name('admin.booking.approveCancel');
+    Route::get('/booking/reject-cancel/{id}', [BookingController::class,'rejectCancel'])
+    ->name('admin.booking.rejectCancel');
 
     Route::post('/booking/lock', [AdminController::class,'lock'])->name('admin.booking.lock');
 
@@ -298,3 +303,5 @@ Route::get('/booking/{id}/review', [BookingController::class, 'review'])
 Route::post('/booking/{id}/review', [BookingController::class, 'submitReview'])
     ->name('booking.review.submit');
 
+Route::get('/get-booked-slots', [BookingController::class, 'getBookedSlots']);
+ Route::get('/check-slot', [BookingController::class, 'checkSlot']);

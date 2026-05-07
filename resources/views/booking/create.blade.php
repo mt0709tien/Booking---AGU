@@ -55,19 +55,21 @@
                                 <label class="form-label">Ngày đặt sân</label>
                                 <div class="input-group shadow-sm rounded">
                                     <span class="input-group-text bg-white border-end-0"><i class="far fa-calendar-alt text-primary"></i></span>
-                                    <input type="date" id="booking_date" class="form-control border-start-0" min="{{ date('Y-m-d') }}">
+                                    {{-- [FIX] Thêm onchange để lọc giờ bắt đầu --}}
+                                    <input type="date" id="booking_date" class="form-control border-start-0" min="{{ date('Y-m-d') }}" onchange="filterStartTimes()">
                                 </div>
                             </div>
 
                             {{-- GIỜ BẮT ĐẦU --}}
                             <div class="col-md-3">
                                 <label class="form-label">Giờ bắt đầu</label>
-                                <select id="start_time" class="form-select shadow-sm">
+                                {{-- [FIX] Thêm onchange để lọc giờ kết thúc, thêm data-minutes --}}
+                                <select id="start_time" class="form-select shadow-sm" onchange="filterEndTimes()">
                                     <option value="">--:--</option>
                                     @for($h = 7; $h <= 21; $h++)
-                                        <option value="{{ sprintf('%02d:00', $h) }}">{{ sprintf('%02d:00', $h) }}</option>
+                                        <option value="{{ sprintf('%02d:00', $h) }}" data-minutes="{{ $h * 60 }}">{{ sprintf('%02d:00', $h) }}</option>
                                         @if($h < 21)
-                                            <option value="{{ sprintf('%02d:30', $h) }}">{{ sprintf('%02d:30', $h) }}</option>
+                                            <option value="{{ sprintf('%02d:30', $h) }}" data-minutes="{{ $h * 60 + 30 }}">{{ sprintf('%02d:30', $h) }}</option>
                                         @endif
                                     @endfor
                                 </select>
@@ -76,12 +78,13 @@
                             {{-- GIỜ KẾT THÚC --}}
                             <div class="col-md-3">
                                 <label class="form-label">Giờ kết thúc</label>
+                                {{-- [FIX] Thêm data-minutes --}}
                                 <select id="end_time" class="form-select shadow-sm">
                                     <option value="">--:--</option>
                                     @for($h = 7; $h <= 21; $h++)
-                                        <option value="{{ sprintf('%02d:00', $h) }}">{{ sprintf('%02d:00', $h) }}</option>
+                                        <option value="{{ sprintf('%02d:00', $h) }}" data-minutes="{{ $h * 60 }}">{{ sprintf('%02d:00', $h) }}</option>
                                         @if($h < 21)
-                                            <option value="{{ sprintf('%02d:30', $h) }}">{{ sprintf('%02d:30', $h) }}</option>
+                                            <option value="{{ sprintf('%02d:30', $h) }}" data-minutes="{{ $h * 60 + 30 }}">{{ sprintf('%02d:30', $h) }}</option>
                                         @endif
                                     @endfor
                                 </select>
@@ -100,10 +103,16 @@
                         <div id="hiddenInputs"></div>
 
                         <div class="d-flex flex-column align-items-center bg-light p-3 rounded-4 mb-4 shadow-sm border">
-                            <span class="text-muted small fw-bold text-uppercase mb-1">Đơn giá tham khảo</span>
+                            <span class="text-muted small fw-bold text-uppercase mb-1">Đơn giá</span>
                             <div class="price-text fw-bold">
                                 {{ number_format($facility->category->price_hour) }} VNĐ <span class="text-muted small">/ giờ</span>
                             </div>
+                        </div>
+                        <div class="mt-4">
+                            <h6 class="fw-bold text-danger mb-2">
+                               ⛔ Khung giờ đã được đặt
+                            </h6>
+                        <div id="bookedList"></div>
                         </div>
 
                         <div class="text-center d-flex justify-content-center gap-3">
@@ -114,22 +123,27 @@
                             @endunless
 
                             @if(Auth::check() && Auth::user()->vai_tro == 'admin')
+                                {{-- [FIX] Nút khóa có thêm xác nhận trước khi submit --}}
                                 <button type="submit" class="btn btn-warning btn-action px-5 py-2 shadow" onclick="submitForm(event, 'lock')">
                                     <i class="fas fa-lock me-2"></i>Khóa sân ngay
                                 </button>
                             @endif
                         </div>
                     </form>
+                    
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- JS của bạn giữ nguyên --}}
-    <script>
+<script>
 let slots = [];
+let bookedSlots = [];
 let isChecking = false;
 
+// =======================
+// UTILS
+// =======================
 function toMinutes(time) {
     if(!time) return 0;
     let [h, m] = time.split(':').map(Number);
@@ -142,22 +156,119 @@ function isOverlap(aStart, aEnd, bStart, bEnd) {
 }
 
 // =======================
+// [FIX] LỌC GIỜ BẮT ĐẦU THEO NGÀY
+// Nếu chọn hôm nay → ẩn các giờ đã qua
+// =======================
+function filterStartTimes() {
+    let date = document.getElementById('booking_date').value;
+    let today = new Date().toISOString().split('T')[0];
+    let now = new Date();
+    let nowMinutes = now.getHours() * 60 + now.getMinutes();
+    // Làm tròn lên 30 phút tiếp theo
+    let roundedMinutes = Math.ceil(nowMinutes / 30) * 30;
+
+    let startSelect = document.getElementById('start_time');
+    startSelect.value = '';
+
+    Array.from(startSelect.options).forEach(opt => {
+        if (!opt.value) return;
+        let optMinutes = parseInt(opt.getAttribute('data-minutes'));
+        if (date === today) {
+            opt.hidden   = optMinutes < roundedMinutes;
+            opt.disabled = optMinutes < roundedMinutes;
+        } else {
+            opt.hidden   = false;
+            opt.disabled = false;
+        }
+    });
+
+    // Reset end_time khi đổi ngày
+    document.getElementById('end_time').value = '';
+    // Reset lại filter end_time về trạng thái đầy đủ
+    Array.from(document.getElementById('end_time').options).forEach(opt => {
+        opt.hidden   = false;
+        opt.disabled = false;
+    });
+}
+
+// =======================
+// [FIX] LỌC GIỜ KẾT THÚC (phải sau giờ bắt đầu)
+// =======================
+function filterEndTimes() {
+    let startVal = document.getElementById('start_time').value;
+    if (!startVal) return;
+    let startMinutes = toMinutes(startVal);
+
+    let endSelect = document.getElementById('end_time');
+    endSelect.value = '';
+
+    Array.from(endSelect.options).forEach(opt => {
+        if (!opt.value) return;
+        let optMinutes = parseInt(opt.getAttribute('data-minutes'));
+        opt.hidden   = optMinutes <= startMinutes;
+        opt.disabled = optMinutes <= startMinutes;
+    });
+}
+
+// =======================
+// LOAD SLOT ĐÃ ĐẶT TỪ DB
+// =======================
+async function loadBookedSlots(date) {
+    let facilityId = "{{ $facility->id }}";
+
+    try {
+        let res = await fetch(`/get-booked-slots?facility_id=${facilityId}&date=${date}`);
+        let data = await res.json();
+
+        bookedSlots = data.slots || [];
+    } catch (e) {
+        console.error("Lỗi load booked slots:", e);
+        bookedSlots = [];
+    }
+}
+
+// =======================
+// HIỂN THỊ SLOT ĐÃ ĐẶT
+// =======================
+function renderBookedList() {
+    let html = '';
+
+    if (bookedSlots.length === 0) {
+        html = '<div class="text-muted">Chưa có ai đặt</div>';
+    } else {
+        bookedSlots.forEach(s => {
+            html += `
+                <div class="p-2 mb-2 border rounded bg-light d-flex justify-content-between">
+                    <span class="text-danger fw-bold">
+                        ${s.start_time} - ${s.end_time}
+                    </span>
+                    <span class="badge bg-danger">Đã đặt</span>
+                </div>
+            `;
+        });
+    }
+
+    document.getElementById('bookedList').innerHTML = html;
+}
+
+// =======================
 // CHECK TRÙNG DATABASE
 // =======================
 async function checkDatabaseConflict(date, start, end) {
     let facilityId = "{{ $facility->id }}";
+
     try {
         let res = await fetch(`/check-slot?facility_id=${facilityId}&date=${date}&start=${start}&end=${end}`);
         let data = await res.json();
         return data.conflict;
     } catch (e) {
-        console.error("Lỗi check database:", e);
+        console.error("Lỗi check DB:", e);
         return false;
     }
 }
 
 // =======================
-// REALTIME CHECK (Khi người dùng thay đổi input)
+// REALTIME CHECK
 // =======================
 async function checkRealtime() {
     let date = document.getElementById('booking_date').value;
@@ -172,10 +283,10 @@ async function checkRealtime() {
         return;
     }
 
-    // Check trùng với các slot đã nhấn "Thêm" ở dưới
+    // check local slots
     for (let s of slots) {
         if (s.date === date && isOverlap(start, end, s.start, s.end)) {
-            alert('❌ Khung giờ này trùng với khung giờ bạn đã thêm vào danh sách bên dưới!');
+            alert('❌ Trùng với slot đã thêm!');
             document.getElementById('end_time').value = '';
             return;
         }
@@ -185,8 +296,9 @@ async function checkRealtime() {
     isChecking = true;
 
     let conflict = await checkDatabaseConflict(date, start, end);
+
     if (conflict) {
-        alert('❌ Khung giờ này đã có người khác đặt trong hệ thống!');
+        alert('❌ Khung giờ đã có người đặt!');
         document.getElementById('end_time').value = '';
     }
 
@@ -194,7 +306,7 @@ async function checkRealtime() {
 }
 
 // =======================
-// NÚT THÊM SLOT
+// THÊM SLOT
 // =======================
 async function addSlot() {
     let date = document.getElementById('booking_date').value;
@@ -202,7 +314,7 @@ async function addSlot() {
     let end = document.getElementById('end_time').value;
 
     if (!date || !start || !end) {
-        alert('Vui lòng chọn đầy đủ ngày, giờ bắt đầu và giờ kết thúc!');
+        alert('Vui lòng nhập đầy đủ!');
         return;
     }
 
@@ -211,44 +323,46 @@ async function addSlot() {
         return;
     }
 
-    // Kiểm tra trùng local
+    // check local
     for (let s of slots) {
         if (s.date === date && isOverlap(start, end, s.start, s.end)) {
-            alert('Khung giờ trùng với slot đã thêm!');
+            alert('Trùng slot đã thêm!');
             return;
         }
     }
 
-    // Kiểm tra trùng database
+    // check DB
     let conflict = await checkDatabaseConflict(date, start, end);
     if (conflict) {
-        alert('Khung giờ đã được đặt!');
+        alert('Slot đã được đặt!');
         return;
     }
 
     slots.push({ date, start, end });
     renderSlots();
 
-    // Reset khung chọn giờ (giữ lại ngày để tiện chọn tiếp)
     document.getElementById('start_time').value = '';
     document.getElementById('end_time').value = '';
 }
 
+// =======================
+// RENDER SLOT ĐÃ CHỌN
+// =======================
 function renderSlots() {
     let html = '';
+
     slots.forEach((s, i) => {
         html += `
-            <div class="slot-item p-3 mb-2 d-flex justify-content-between align-items-center animate__animated animate__fadeIn">
+            <div class="slot-item p-3 mb-2 d-flex justify-content-between">
                 <div>
-                    <span class="badge bg-primary me-2">${s.date}</span>
-                    <span class="fw-bold">${s.start} - ${s.end}</span>
+                    <span class="badge bg-primary">${s.date}</span>
+                    <span class="fw-bold ms-2">${s.start} - ${s.end}</span>
                 </div>
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeSlot(${i})">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeSlot(${i})">X</button>
             </div>
         `;
     });
+
     document.getElementById('slotList').innerHTML = html;
 }
 
@@ -258,31 +372,51 @@ function removeSlot(index) {
 }
 
 // =======================
-// NÚT XÁC NHẬN / KHÓA SÂN
+// SUBMIT
+// [FIX] Recheck tất cả slot trong list trước khi submit
 // =======================
 async function submitForm(e, type = 'book') {
     e.preventDefault();
 
+    // [FIX] Thêm xác nhận trước khi khóa
+    if (type === 'lock') {
+        if (!confirm('Bạn có chắc muốn khóa sân cho các khung giờ này không?')) {
+            return;
+        }
+    }
+
     let facilityId = "{{ $facility->id }}";
     let container = document.getElementById('hiddenInputs');
     let form = e.target.closest('form');
+
     container.innerHTML = '';
 
     let curDate = document.getElementById('booking_date').value;
     let curStart = document.getElementById('start_time').value;
     let curEnd = document.getElementById('end_time').value;
 
-    let hasCurrentInput = curDate && curStart && curEnd;
-    let hasSlotsInList = slots.length > 0;
+    let hasCurrent = curDate && curStart && curEnd;
+    let hasList = slots.length > 0;
 
-    // YÊU CẦU: Chỉ thông báo khi cả 2 đều trống
-    if (!hasCurrentInput && !hasSlotsInList) {
-        alert('Vui lòng chọn hoặc thêm ít nhất một khung giờ!');
+    if (!hasCurrent && !hasList) {
+        alert('Chọn ít nhất 1 khung giờ!');
         return;
     }
 
-    // 1. Xử lý các slot đã có trong danh sách (dưới khung chọn)
+    // [FIX] Recheck tất cả slot trong list trước khi submit
     for (let s of slots) {
+        let conflict = await checkDatabaseConflict(s.date, s.start, s.end);
+        if (conflict) {
+            alert(`❌ Slot ${s.date} ${s.start} - ${s.end} vừa bị người khác đặt! Vui lòng kiểm tra lại.`);
+            // Làm mới danh sách booked nếu đang xem cùng ngày
+            let curViewDate = document.getElementById('booking_date').value;
+            if (curViewDate === s.date) {
+                await loadBookedSlots(s.date);
+                renderBookedList();
+            }
+            return;
+        }
+
         let input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'bookings[]';
@@ -290,26 +424,19 @@ async function submitForm(e, type = 'book') {
         container.appendChild(input);
     }
 
-    // 2. Xử lý khung giờ đang chọn ở trên (nếu có và chưa nhấn Thêm)
-    if (hasCurrentInput) {
-        // Kiểm tra trùng với danh sách bên dưới
-        for (let s of slots) {
-            if (s.date === curDate && isOverlap(curStart, curEnd, s.start, s.end)) {
-                alert('Khung giờ đang chọn trùng với danh sách đã thêm. Vui lòng kiểm tra lại!');
-                container.innerHTML = '';
-                return;
-            }
-        }
-
-        // Kiểm tra trùng database lần cuối cho khung đang chọn
-        let conflict = await checkDatabaseConflict(curDate, curStart, curEnd);
-        if (conflict) {
-            alert('Khung giờ đang chọn đã được đặt hoặc khóa. Vui lòng chọn giờ khác!');
-            container.innerHTML = '';
+    // current input
+    if (hasCurrent) {
+        if (toMinutes(curStart) >= toMinutes(curEnd)) {
+            alert('Giờ không hợp lệ!');
             return;
         }
 
-        // Nếu hợp lệ thì thêm vào input gửi đi luôn
+        let conflict = await checkDatabaseConflict(curDate, curStart, curEnd);
+        if (conflict) {
+            alert('Slot hiện tại đã bị đặt!');
+            return;
+        }
+
         let input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'bookings[]';
@@ -317,15 +444,31 @@ async function submitForm(e, type = 'book') {
         container.appendChild(input);
     }
 
-    // Cuối cùng: Submit form
+    // Kiểm tra sau recheck vẫn còn slot để submit không
+    if (container.querySelectorAll('input').length === 0) {
+        alert('Không có khung giờ hợp lệ để đặt!');
+        return;
+    }
+
     form.submit();
 }
 
-// Event listeners
-document.getElementById('booking_date').addEventListener('change', checkRealtime);
+// =======================
+// EVENT
+// =======================
+document.getElementById('booking_date').addEventListener('change', async function () {
+    let date = this.value;
+    if (!date) return;
+
+    await loadBookedSlots(date);
+    renderBookedList();
+});
+
 document.getElementById('start_time').addEventListener('change', checkRealtime);
 document.getElementById('end_time').addEventListener('change', checkRealtime);
 </script>
+
+
     {{-- ========================= GIAO DIỆN PHÒNG / CA ========================= --}}
     @elseif($facility->category->type == 'room')
     <div class="card booking-card shadow-lg overflow-hidden">
@@ -347,6 +490,16 @@ document.getElementById('end_time').addEventListener('change', checkRealtime);
                         </thead>
                         <tbody>
                             @foreach($weekDays as $day)
+                            {{-- [FIX] Tính toán buổi đã qua cho ngày hôm nay --}}
+                            @php
+                                $isToday    = $day['date']->isToday();
+                                $currentHour = now()->hour;
+                                $hideMap = [
+                                    'morning'   => $isToday && $currentHour >= 11,
+                                    'afternoon' => $isToday && $currentHour >= 17,
+                                    'evening'   => $isToday && $currentHour >= 21,
+                                ];
+                            @endphp
                             <tr>
                                 <td class="ps-4 py-3">
                                     <div class="fw-bold text-dark">{{ ucwords($day['date']->locale('vi')->isoFormat('dddd')) }}</div>
@@ -357,11 +510,16 @@ document.getElementById('end_time').addEventListener('change', checkRealtime);
                                 @php $slot = $day[$session]; @endphp
                                 <td>
                                     <div class="p-2 rounded-3 border bg-light shadow-sm text-center" style="min-height: 80px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                                        @if($slot && $slot->booking && $slot->booking->status != 'cancelled')
+                                        {{-- [FIX] Nếu buổi đã qua → hiển thị badge "Đã qua" --}}
+                                        @if($hideMap[$session])
+                                            <span class="badge bg-secondary badge-status rounded-pill">Đã qua</span>
+                                        @elseif($slot && $slot->booking && $slot->booking->status != 'cancelled')
                                             {{-- LOCK --}}
                                             @if($slot->booking->status == 'locked')
                                                 @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-                                                    <form action="{{ route('admin.booking.unlock') }}" method="POST">
+                                                    {{-- [FIX] Thêm xác nhận trước khi mở khóa --}}
+                                                    <form action="{{ route('admin.booking.unlock') }}" method="POST"
+                                                          onsubmit="return confirm('Bạn có chắc muốn mở khóa ca này không?')">
                                                         @csrf
                                                         <input type="hidden" name="facility_id" value="{{ $facility->id }}">
                                                         <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">
@@ -380,7 +538,9 @@ document.getElementById('end_time').addEventListener('change', checkRealtime);
                                         @else
                                             {{-- SLOT TRỐNG --}}
                                             @if(Auth::check() && Auth::user()->vai_tro == 'admin')
-                                                <form action="{{ route('admin.booking.lock') }}" method="POST">
+                                                {{-- [FIX] Thêm xác nhận trước khi khóa --}}
+                                                <form action="{{ route('admin.booking.lock') }}" method="POST"
+                                                      onsubmit="return confirm('Bạn có chắc muốn khóa ca này không?')">
                                                     @csrf
                                                     <input type="hidden" name="facility_id" value="{{ $facility->id }}">
                                                     <input type="hidden" name="date" value="{{ $day['date']->format('Y-m-d') }}">

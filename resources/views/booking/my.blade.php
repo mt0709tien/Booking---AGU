@@ -140,6 +140,8 @@
                                         <span class="badge bg-danger badge-soft">Từ chối</span>
                                     @elseif($booking->status == 'locked')
                                         <span class="badge bg-dark badge-soft">Đã khóa</span>
+                                    @elseif($booking->status == 'cancel_requested')
+                                         <span class="badge bg-warning text-dark badge-soft">Yêu cầu hủy</span>
                                     @else
                                         <span class="badge bg-light text-dark badge-soft">Khác</span>
                                     @endif
@@ -168,27 +170,42 @@
             </a>
         @endif
 
-        {{-- chờ duyệt -> hủy --}}
-        @if($booking->status == 'pending')
-            <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" class="w-100">
-                @csrf
-                @method('DELETE')
-                <button class="btn btn-sm btn-outline-danger w-100"
-                        onclick="return confirm('Bạn chắc chắn muốn hủy yêu cầu này?')">
-                    <i class="fas fa-trash-alt me-1"></i> Hủy
-                </button>
-            </form>
+        {{-- pending → hủy luôn --}}
+@if($booking->status == 'pending')
+    <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" class="w-100">
+        @csrf
+        <button class="btn btn-sm btn-outline-danger w-100"
+                onclick="return confirm('Bạn chắc chắn muốn hủy yêu cầu này?')">
+            <i class="fas fa-trash-alt me-1"></i> Hủy
+        </button>
+    </form>
 
-        {{-- đã duyệt -> đánh giá --}}
-        @elseif($booking->status == 'approved')
-            <a href="{{ route('booking.review', $booking->id) }}"
-               class="btn btn-sm btn-outline-primary w-100">
-                <i class="fas fa-star me-1"></i> Đánh giá
-            </a>
+{{-- approved + chưa nhận sân → yêu cầu hủy --}}
+@elseif($booking->status == 'approved' && !$booking->is_checked_in)
+    <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" class="w-100">
+        @csrf
+        <button class="btn btn-sm btn-outline-warning w-100"
+                onclick="return confirm('Gửi yêu cầu hủy đến admin?')">
+            <i class="fas fa-hand-paper me-1"></i> Yêu cầu hủy
+        </button>
+    </form>
 
-        @else
-            <span class="text-muted small">N/A</span>
-        @endif
+{{-- approved + đã nhận sân → đánh giá --}}
+@elseif($booking->status == 'approved' && $booking->is_checked_in)
+    <a href="{{ route('booking.review', $booking->id) }}"
+       class="btn btn-sm btn-outline-primary w-100">
+        <i class="fas fa-star me-1"></i> Đánh giá
+    </a>
+
+{{-- đang chờ admin duyệt hủy --}}
+@elseif($booking->status == 'cancel_requested')
+    <span class="badge bg-warning text-dark">
+        <i class="fas fa-hourglass-half me-1"></i> Chờ admin duyệt hủy
+    </span>
+
+@else
+    <span class="text-muted small">N/A</span>
+@endif
 
     </div>
 </td>
