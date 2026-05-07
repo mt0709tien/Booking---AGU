@@ -146,8 +146,8 @@
                                 <strong class="d-block mb-1">Lưu ý quan trọng:</strong>
                                 <ul class="ps-3 mb-0">
                                     <li>Vui lòng kiểm tra kỹ thời gian đã chọn.</li>
-                                    <li>Đơn sẽ tự động hủy nếu không đến đúng giờ.</li>
-                                    <li>Xác nhận sẽ được gửi sau khi nhân viên kiểm tra thanh toán.</li>
+                                    <li>Đơn sẽ tự động hủy nếu sau 30 phút quý khách không đến nhận.</li>
+                                    <li>Xác nhận sẽ được gửi sau khi kiểm tra đầy đủ thông tin.</li>
                                 </ul>
                             </div>
                         </div>

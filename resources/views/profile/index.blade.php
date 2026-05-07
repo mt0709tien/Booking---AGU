@@ -104,8 +104,8 @@
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <h2 class="fw-800 mb-5 text-center">
-                <span class="text-gradient-primary">✨ KHÔNG GIAN</span> 
-                <span class="text-gradient-danger">CÁ NHÂN ✨</span>
+                <span class="text-gradient-primary"> THÔNG TIN </span> 
+                <span class="text-gradient-danger">CÁ NHÂN </span>
             </h2>
 
             @if(session('success'))

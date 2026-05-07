@@ -204,7 +204,7 @@
     </span>
 
 @else
-    <span class="text-muted small">N/A</span>
+    <span class="text-muted small">Đã xử lý</span>
 @endif
 
     </div>

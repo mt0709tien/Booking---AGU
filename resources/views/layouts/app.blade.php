@@ -238,7 +238,7 @@
             @else
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('booking.home') }}">
-                        🛒 Đặt sân
+                        🛒 Đặt ngay
                     </a>
                 </li>
             @endif
