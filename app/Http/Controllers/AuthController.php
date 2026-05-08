@@ -92,32 +92,31 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 
-    // =========================
-// GOOGLE LOGIN
-// =========================
+    
+    // GOOGLE LOGIN
 
-public function redirectToGoogle()
-{
-    return Socialite::driver('google')->redirect();
-}
+    public function redirectToGoogle()
+    {
+         return Socialite::driver('google')->redirect();
+    }
 
-public function handleGoogleCallback()
-{
-    try {
-        $googleUser = Socialite::driver('google')->stateless()->user();
+    public function handleGoogleCallback()
+    {
+          try {
+             $googleUser = Socialite::driver('google')->stateless()->user();
 
-        // tìm user theo email
-        $user = User::where('email', $googleUser->getEmail())->first();
+           // tìm user theo email
+             $user = User::where('email', $googleUser->getEmail())->first();
 
-        if (!$user) {
+             if (!$user) {
             // tạo user mới
-            $user = User::create([
-                'ho_ten' => $googleUser->getName(),
-                'email' => $googleUser->getEmail(),
-                'password' => Hash::make('12345678'),
-                'vai_tro' => 'user'
-            ]);
-        }
+                 $user = User::create([
+                    'ho_ten' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'password' => Hash::make('12345678'),
+                  'vai_tro' => 'user'
+            ]   );
+            }
 
         Auth::login($user);
 

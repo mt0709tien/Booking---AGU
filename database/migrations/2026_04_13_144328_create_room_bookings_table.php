@@ -21,7 +21,6 @@ return new class extends Migration
 
     $table->date('booking_date');
 
-    // 🔥 sửa string -> enum
     $table->enum('session', ['morning', 'afternoon', 'evening']);
 
     $table->timestamps();

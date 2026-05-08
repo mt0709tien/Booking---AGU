@@ -141,9 +141,7 @@ let slots = [];
 let bookedSlots = [];
 let isChecking = false;
 
-// =======================
 // UTILS
-// =======================
 function toMinutes(time) {
     if(!time) return 0;
     let [h, m] = time.split(':').map(Number);
@@ -155,10 +153,10 @@ function isOverlap(aStart, aEnd, bStart, bEnd) {
            toMinutes(aEnd) > toMinutes(bStart);
 }
 
-// =======================
-// [FIX] LỌC GIỜ BẮT ĐẦU THEO NGÀY
+
+//  LỌC GIỜ BẮT ĐẦU THEO NGÀY
 // Nếu chọn hôm nay → ẩn các giờ đã qua
-// =======================
+
 function filterStartTimes() {
     let date = document.getElementById('booking_date').value;
     let today = new Date().toISOString().split('T')[0];
@@ -191,9 +189,9 @@ function filterStartTimes() {
     });
 }
 
-// =======================
-// [FIX] LỌC GIỜ KẾT THÚC (phải sau giờ bắt đầu)
-// =======================
+
+//  LỌC GIỜ KẾT THÚC (phải sau giờ bắt đầu)
+
 function filterEndTimes() {
     let startVal = document.getElementById('start_time').value;
     if (!startVal) return;
@@ -210,9 +208,7 @@ function filterEndTimes() {
     });
 }
 
-// =======================
 // LOAD SLOT ĐÃ ĐẶT TỪ DB
-// =======================
 async function loadBookedSlots(date) {
     let facilityId = "{{ $facility->id }}";
 
@@ -227,9 +223,8 @@ async function loadBookedSlots(date) {
     }
 }
 
-// =======================
+
 // HIỂN THỊ SLOT ĐÃ ĐẶT
-// =======================
 function renderBookedList() {
     let html = '';
 
@@ -251,9 +246,8 @@ function renderBookedList() {
     document.getElementById('bookedList').innerHTML = html;
 }
 
-// =======================
+
 // CHECK TRÙNG DATABASE
-// =======================
 async function checkDatabaseConflict(date, start, end) {
     let facilityId = "{{ $facility->id }}";
 
@@ -267,9 +261,9 @@ async function checkDatabaseConflict(date, start, end) {
     }
 }
 
-// =======================
+
 // REALTIME CHECK
-// =======================
+
 async function checkRealtime() {
     let date = document.getElementById('booking_date').value;
     let start = document.getElementById('start_time').value;
@@ -305,9 +299,9 @@ async function checkRealtime() {
     isChecking = false;
 }
 
-// =======================
+
 // THÊM SLOT
-// =======================
+
 async function addSlot() {
     let date = document.getElementById('booking_date').value;
     let start = document.getElementById('start_time').value;
@@ -345,9 +339,8 @@ async function addSlot() {
     document.getElementById('end_time').value = '';
 }
 
-// =======================
 // RENDER SLOT ĐÃ CHỌN
-// =======================
+
 function renderSlots() {
     let html = '';
 
@@ -371,14 +364,14 @@ function removeSlot(index) {
     renderSlots();
 }
 
-// =======================
+
 // SUBMIT
-// [FIX] Recheck tất cả slot trong list trước khi submit
-// =======================
+// Recheck tất cả slot trong list trước khi submit
+
 async function submitForm(e, type = 'book') {
     e.preventDefault();
 
-    // [FIX] Thêm xác nhận trước khi khóa
+    //  Thêm xác nhận trước khi khóa
     if (type === 'lock') {
         if (!confirm('Bạn có chắc muốn khóa sân cho các khung giờ này không?')) {
             return;
@@ -452,10 +445,7 @@ async function submitForm(e, type = 'book') {
 
     form.submit();
 }
-
-// =======================
 // EVENT
-// =======================
 document.getElementById('booking_date').addEventListener('change', async function () {
     let date = this.value;
     if (!date) return;
@@ -513,7 +503,7 @@ document.getElementById('end_time').addEventListener('change', checkRealtime);
                                         {{-- [FIX] Nếu buổi đã qua → hiển thị badge "Đã qua" --}}
                                         @if($hideMap[$session])
                                             <span class="badge bg-secondary badge-status rounded-pill">Đã qua</span>
-                                        @elseif($slot && $slot->booking && $slot->booking->status != 'cancelled')
+                                        @elseif($slot)
                                             {{-- LOCK --}}
                                             @if($slot->booking->status == 'locked')
                                                 @if(Auth::check() && Auth::user()->vai_tro == 'admin')
@@ -534,6 +524,9 @@ document.getElementById('end_time').addEventListener('change', checkRealtime);
                                                 <span class="badge bg-danger badge-status rounded-pill">Đã thuê</span>
                                             @elseif($slot->booking->status == 'pending')
                                                 <span class="badge bg-warning text-dark badge-status rounded-pill">Chờ duyệt</span>
+                                            @elseif($slot->booking->status == 'cancel_requested')
+                                                <span class="badge badge-status rounded-pill text-white" 
+                                                 style="background-color:#fd7e14;">Chờ hủy</span>
                                             @endif
                                         @else
                                             {{-- SLOT TRỐNG --}}

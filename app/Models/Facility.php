@@ -21,13 +21,13 @@ class Facility extends Model
         return $this->belongsTo(Category::class);
     }
 
-    // 🔥 PHÒNG
+    //  PHÒNG
     public function roomBookings()
     {
         return $this->hasMany(RoomBooking::class);
     }
 
-    // 🔥 SÂN
+    //  SÂN
     public function sportBookings()
     {
         return $this->hasMany(SportBooking::class);

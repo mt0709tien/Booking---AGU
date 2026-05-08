@@ -61,7 +61,7 @@ class AdminController extends Controller
         return view('admin.hall', compact('halls'));
     }
 
-    // ================== BOOKINGS ==================
+    // BOOKINGS 
 
     public function bookings(Request $request)
 {
@@ -71,7 +71,7 @@ class AdminController extends Controller
         'sportBookings.facility.category'
     ]);
 
-    // 🔍 Lọc theo tên cơ sở
+    //  Loc theo ten co so
     if ($request->filled('facility')) {
         $facility = $request->facility;
 
@@ -85,7 +85,7 @@ class AdminController extends Controller
         });
     }
 
-    // 📅 Lọc theo ngày
+    // loc theo ngay
     if ($request->filled('date')) {
         $date = $request->date;
 
@@ -104,7 +104,7 @@ class AdminController extends Controller
     return view('admin.bookings', compact('bookings'));
 }
 
-    // ================== STATS ==================
+    // STATS 
 
     public function stats(Request $request)
 {
@@ -138,17 +138,14 @@ class AdminController extends Controller
         $to = Carbon\Carbon::parse($request->to)->endOfDay();
     }
 
-    // ======================
-    // Tổng doanh thu theo paid_at
-    // ======================
+    // tong doanh thu theo thoi gian thanh toan
     $totalRevenue = Booking::where('is_paid', 1)
         ->whereNotNull('paid_at')
         ->whereBetween('paid_at', [$from, $to])
         ->sum('price');
 
-    // ======================
-    // Biểu đồ doanh thu theo paid_at
-    // ======================
+   
+    // Bieu do doanh thu theo thoi gian thanh toan
     $chart = Booking::selectRaw('DATE(paid_at) as day, SUM(price) as total')
         ->where('is_paid', 1)
         ->whereNotNull('paid_at')
@@ -163,9 +160,7 @@ class AdminController extends Controller
 
     $revenueData = $chart->pluck('total');
 
-    // ======================
     // Top cơ sở doanh thu
-    // ======================
     $topFacilities = Facility::withSum([
         'bookings as total_revenue' => function ($q) use ($from, $to) {
             $q->where('is_paid', 1)
@@ -188,7 +183,7 @@ class AdminController extends Controller
     ));
 }
 
-    // ================== DUYỆT ==================
+    //  DUYỆT 
 
     public function approve($id)
     {
@@ -208,7 +203,7 @@ class AdminController extends Controller
         return back()->with('success', 'Đã duyệt!');
     }
 
-    // ================== TỪ CHỐI ==================
+    //  TỪ CHỐI
 
     public function reject($id)
     {
@@ -228,19 +223,17 @@ class AdminController extends Controller
         return back()->with('success', 'Đã từ chối!');
     }
 
-    // ================== KHÓA ==================
+    // KHÓA 
 
     public function lock(Request $request)
     {
-        // 🔥 XÓA SLOT CŨ
-
+        // XÓA SLOT CŨ
         RoomBooking::where('facility_id', $request->facility_id)
             ->whereDate('booking_date', $request->date)
             ->where('session', $request->session)
             ->delete();
 
-        // 🔥 TẠO BOOKING CHA
-
+        // TẠO BOOKING CHA
         $booking = Booking::create([
             'user_id' => auth()->id(),
             'fullname' => auth()->user()->ho_ten,
@@ -250,7 +243,7 @@ class AdminController extends Controller
             'status' => 'locked'
         ]);
 
-        // 🔥 TẠO ROOM BOOKING
+        // TẠO ROOM BOOKING
 
         RoomBooking::create([
             'booking_id' => $booking->id,
@@ -262,7 +255,7 @@ class AdminController extends Controller
         return back()->with('success', 'Đã khóa!');
     }
 
-    // ================== MỞ KHÓA ==================
+    //  MỞ KHÓA
 
     public function unlock(Request $request)
     {
@@ -286,7 +279,7 @@ class AdminController extends Controller
     $start = $request->start_time;
     $end = $request->end_time;
 
-    // ❌ XÓA SLOT TRÙNG (nếu có)
+    // XÓA SLOT TRÙNG 
     SportBooking::where('facility_id', $facility_id)
         ->whereDate('booking_date', $date)
         ->where(function ($q) use ($start, $end) {
@@ -299,7 +292,7 @@ class AdminController extends Controller
         })
         ->delete();
 
-    // 🔥 TẠO BOOKING CHA (ADMIN LOCK)
+    // TẠO BOOKING CHA (ADMIN LOCK)
     $booking = Booking::create([
         'user_id' => auth()->id(),
         'fullname' => auth()->user()->ho_ten,
@@ -309,7 +302,7 @@ class AdminController extends Controller
         'status' => 'locked'
     ]);
 
-    // 🔥 TẠO SPORT BOOKING
+    // TẠO SPORT BOOKING
     SportBooking::create([
         'booking_id' => $booking->id,
         'facility_id' => $facility_id,
@@ -322,7 +315,7 @@ class AdminController extends Controller
     return back()->with('success', 'Đã khóa sân theo giờ!');
 }
 
-    // ================== THEO CƠ SỞ ==================
+    //  THEO CƠ SỞ 
 
     public function facilityBookings($id)
     {
@@ -344,8 +337,7 @@ class AdminController extends Controller
         return view('admin.facility-bookings', compact('facility', 'bookings'));
     }
 
-    // ================== FACILITY LIST ==================
-
+    //  FACILITY LIST 
     public function facilities(Request $request)
     {
         $query = Facility::with('category');
@@ -363,7 +355,7 @@ class AdminController extends Controller
         return view('admin.facilities', compact('facilities'));
     }
 
-    // ================== EXPORT PDF ==================
+    //  EXPORT PDF 
 
     public function export(Request $request)
     {

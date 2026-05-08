@@ -11,7 +11,7 @@ class CategorySeeder extends Seeder
     {
         Category::insert([
 
-            // ===== SÂN THỂ THAO =====
+            // SÂN THỂ THAO
             [
                 'name' => 'Sân bóng đá',
                 'type' => 'sport',
@@ -48,7 +48,7 @@ class CategorySeeder extends Seeder
                 'price_hour' => 120000,
             ],
 
-            // ===== PHÒNG =====
+            //  PHÒNG 
             [
                 'name' => 'Hội trường 600',
                 'type' => 'room',

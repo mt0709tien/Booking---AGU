@@ -10,7 +10,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
-    // 📋 Danh sách hóa đơn
+    // Danh sách hóa đơn
     public function index()
     {
         $invoices = Invoice::with('user','booking')
@@ -20,14 +20,14 @@ class InvoiceController extends Controller
         return view('admin.invoices.index', compact('invoices'));
     }
 
-    // 🧾 Tạo hóa đơn từ booking
+    //  Tạo hóa đơn từ booking
     public function create($bookingId)
     {
         $booking = Booking::findOrFail($bookingId);
         return view('admin.invoices.create', compact('booking'));
     }
 
-    // 💾 Lưu hóa đơn
+    //  Lưu hóa đơn
     public function store(Request $request)
     {
         $booking = Booking::findOrFail($request->booking_id);
@@ -50,7 +50,7 @@ class InvoiceController extends Controller
             ->with('success','Tạo hóa đơn thành công');
     }
 
-    // 👁 Xem chi tiết
+    //  Xem chi tiết
     public function show($id)
     {
         $invoice = Invoice::with('details','user','booking')->findOrFail($id);
@@ -64,7 +64,7 @@ class InvoiceController extends Controller
         return back()->with('error','Không có booking');
     }
 
-    // ❌ tránh tạo trùng
+    // tránh tạo trùng
     $exists = Invoice::whereIn('booking_id', $bookings->pluck('id'))->exists();
 
     if ($exists) {
@@ -80,7 +80,7 @@ class InvoiceController extends Controller
         'status' => 'pending'
     ]);
 
-// 🔥 mapping ca sang tiếng Việt
+// mapping ca sang tiếng Việt
 $map = [
     'morning' => 'Sáng',
     'afternoon' => 'chiều',
@@ -88,7 +88,7 @@ $map = [
     
 ];
 
-// 🔥 tạo chi tiết cho từng ca
+//  tạo chi tiết cho từng ca
 foreach ($bookings as $b) {
 
     $sessionName = $map[$b->session] ?? $b->session;

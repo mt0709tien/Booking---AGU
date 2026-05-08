@@ -13,17 +13,17 @@ class StatsController extends Controller
 {
     public function index(Request $request)
     {
-        // ===== THỐNG KÊ TỔNG =====
+        //  THỐNG KÊ TỔNG 
         $totalUsers = User::count();
         $totalBookings = Booking::count();
         $totalFacilities = Facility::count();
 
-        // ===== DOANH THU =====
+        // DOANH THU 
         $totalRevenue = Booking::where('is_paid', true)
             ->where('status', 'approved')
             ->sum('price');
 
-        // ===== TOP CƠ SỞ (FIX GROUP BY) =====
+        // TOP CƠ SỞ (FIX GROUP BY)
         $topFacilities = DB::table(DB::raw("
             (
                 SELECT rb.facility_id, SUM(b.price) as total_revenue
@@ -55,13 +55,13 @@ class StatsController extends Controller
         ->limit(5)
         ->get();
 
-        // ===== FILTER =====
+        // FILTER 
         $filter = $request->filter ?? '7days';
 
         $revenueData = [];
         $dayLabels = [];
 
-        // ===== FUNCTION LẤY DOANH THU THEO NGÀY =====
+        //  FUNCTION LẤY DOANH THU THEO NGÀY 
         $getRevenueByDate = function ($date) {
             return DB::table('bookings as b')
                 ->leftJoin('room_bookings as rb', 'b.id', '=', 'rb.booking_id')
@@ -75,7 +75,7 @@ class StatsController extends Controller
                 ->sum('b.price');
         };
 
-        // ===== RANGE =====
+        //  RANGE 
         if ($request->from && $request->to) {
 
             $start = Carbon::parse($request->from);
@@ -90,7 +90,7 @@ class StatsController extends Controller
             }
         }
 
-        // ===== HÔM NAY =====
+        // HÔM NAY 
         elseif ($filter == 'today') {
 
             $today = Carbon::today();
@@ -99,7 +99,7 @@ class StatsController extends Controller
             $revenueData[] = $getRevenueByDate($today);
         }
 
-        // ===== THÁNG =====
+        // THÁNG 
         elseif ($filter == 'month') {
 
             $now = Carbon::now();
@@ -113,7 +113,7 @@ class StatsController extends Controller
             }
         }
 
-        // ===== NĂM =====
+        //  NĂM 
         elseif ($filter == 'year') {
 
             for ($i = 1; $i <= 12; $i++) {
@@ -134,7 +134,7 @@ class StatsController extends Controller
             }
         }
 
-        // ===== 7 NGÀY =====
+        // 7 NGÀY
         else {
 
             for ($i = 6; $i >= 0; $i--) {

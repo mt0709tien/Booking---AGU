@@ -40,34 +40,79 @@ class FacilityController extends Controller
     }
 
     // Lưu
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
-        ]);
+    // Lưu
+public function store(Request $request)
+{
+    $request->validate([
+        'name'        => 'required|string|max:255',
+        'category_id' => 'required|exists:categories,id',
+        'description' => 'nullable|string',
+        'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
+    ]);
 
-        $data = $request->only(['name','category_id','description']);
+    // Kiểm tra trùng tên + danh mục
+    $exists = Facility::where('name', $request->name)
+                      ->where('category_id', $request->category_id)
+                      ->exists();
 
-        // upload hình
-        if ($request->hasFile('image')) {
-
-            $file = $request->file('image');
-            $filename = time().'_'.$file->getClientOriginalName();
-
-            $file->move(public_path('images'), $filename);
-
-            $data['image'] = $filename;
-        }
-
-        Facility::create($data);
-
-        return redirect()->route('admin.facilities')
-            ->with('success','Thêm thành công');
+    if ($exists) {
+        return back()->withInput()
+                     ->withErrors(['name' => 'Cơ sở này đã tồn tại trong danh mục đã chọn.']);
     }
 
+    $data = $request->only(['name', 'category_id', 'description']);
+
+    if ($request->hasFile('image')) {
+        $file     = $request->file('image');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $file->move(public_path('images'), $filename);
+        $data['image'] = $filename;
+    }
+
+    Facility::create($data);
+
+    return redirect()->route('admin.facilities')->with('success', 'Thêm thành công');
+}
+
+// Cập nhật
+public function update(Request $request, $id)
+{
+    $facility = Facility::findOrFail($id);
+
+    $request->validate([
+        'name'        => 'required|string|max:255',
+        'category_id' => 'required|exists:categories,id',
+        'description' => 'nullable|string',
+        'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
+    ]);
+
+    // Kiểm tra trùng tên + danh mục (bỏ qua chính nó)
+    $exists = Facility::where('name', $request->name)
+                      ->where('category_id', $request->category_id)
+                      ->where('id', '!=', $id)
+                      ->exists();
+
+    if ($exists) {
+        return back()->withInput()
+                     ->withErrors(['name' => 'Cơ sở này đã tồn tại trong danh mục đã chọn.']);
+    }
+
+    $data = $request->only(['name', 'category_id', 'description']);
+
+    if ($request->hasFile('image')) {
+        if ($facility->image && file_exists(public_path('images/' . $facility->image))) {
+            unlink(public_path('images/' . $facility->image));
+        }
+        $file     = $request->file('image');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $file->move(public_path('images'), $filename);
+        $data['image'] = $filename;
+    }
+
+    $facility->update($data);
+
+    return redirect()->route('admin.facilities')->with('success', 'Cập nhật thành công');
+}
     // Form sửa
     public function edit($id)
     {
@@ -77,56 +122,34 @@ class FacilityController extends Controller
         return view('facilities.edit', compact('facility','categories'));
     }
 
-    // Cập nhật
-    public function update(Request $request, $id)
-    {
-        $facility = Facility::findOrFail($id);
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
-        ]);
-
-        $data = $request->only(['name','category_id','description']);
-
-        // upload hình mới
-        if ($request->hasFile('image')) {
-
-            // xóa ảnh cũ nếu có
-            if ($facility->image && file_exists(public_path('images/'.$facility->image))) {
-                unlink(public_path('images/'.$facility->image));
-            }
-
-            $file = $request->file('image');
-            $filename = time().'_'.$file->getClientOriginalName();
-
-            $file->move(public_path('images'), $filename);
-
-            $data['image'] = $filename;
-        }
-
-        $facility->update($data);
-
-        return redirect()->route('admin.facilities')
-            ->with('success','Cập nhật thành công');
-    }
-
+    
     // Xóa
-    public function delete($id)
-    {
-        $facility = Facility::findOrFail($id);
+   public function delete($id)
+{
+    $facility = Facility::with('category')->findOrFail($id);
 
-        // xóa ảnh nếu có
-        if ($facility->image && file_exists(public_path('images/'.$facility->image))) {
-            unlink(public_path('images/'.$facility->image));
-        }
+    // Kiểm tra lịch đặt tương ứng với loại danh mục
+    $type = $facility->category->type;
 
-        $facility->delete();
-
-        return redirect()->route('admin.facilities')
-            ->with('success','Xóa thành công');
+    if ($type === 'room') {
+        $hasBooking = $facility->roomBookings()->exists();
+    } else {
+        $hasBooking = $facility->sportBookings()->exists();
     }
 
+    if ($hasBooking) {
+        return redirect()->route('admin.facilities')
+                         ->with('error', 'Không thể xóa vì cơ sở đang có lịch đặt.');
+    }
+
+    // Xóa ảnh nếu có
+    if ($facility->image && file_exists(public_path('images/' . $facility->image))) {
+        unlink(public_path('images/' . $facility->image));
+    }
+
+    $facility->delete();
+
+    return redirect()->route('admin.facilities')
+                     ->with('success', 'Xóa thành công');
+}
 }

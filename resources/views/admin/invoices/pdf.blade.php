@@ -101,7 +101,6 @@
 
     <p><strong>Cơ sở:</strong> {{ $facility->name ?? 'Không xác định' }}</p>
 
-    {{-- 🔥 ĐỔI THỜI GIAN -> NGÀY --}}
     <p>
         <strong>Ngày:</strong>
         {{ $date ? \Carbon\Carbon::parse($date)->format('d/m/Y') : '---' }}

@@ -11,11 +11,7 @@ class FacilitySeeder extends Seeder
     public function run(): void
     {
 
-        /*
-        ============================
-        SÂN BÓNG ĐÁ
-        ============================
-        */
+        //san bong da
         $football = Category::where('name','Sân bóng đá')->firstOrFail();
 
         foreach(['Sân bóng đá 1','Sân bóng đá 2'] as $name){
@@ -28,11 +24,7 @@ class FacilitySeeder extends Seeder
         }
 
 
-        /*
-        ============================
-        SÂN BÓNG RỔ
-        ============================
-        */
+        //san bong ro
         $basketball = Category::where('name','Sân bóng rổ')->firstOrFail();
 
         foreach(['Sân bóng rổ 1','Sân bóng rổ 2'] as $name){
@@ -45,11 +37,7 @@ class FacilitySeeder extends Seeder
         }
 
 
-        /*
-        ============================
-        SÂN BÓNG CHUYỀN
-        ============================
-        */
+        //San bong chuyen
         $volleyball = Category::where('name','Sân bóng chuyền')->firstOrFail();
 
         foreach(['Sân bóng chuyền 1','Sân bóng chuyền 2'] as $name){
@@ -62,11 +50,7 @@ class FacilitySeeder extends Seeder
         }
 
 
-        /*
-        ============================
-        SÂN TENNIS
-        ============================
-        */
+        //San tennis
         $tennis = Category::where('name','Sân tennis')->firstOrFail();
 
         foreach(['Sân tennis 1','Sân tennis 2'] as $name){
@@ -79,11 +63,7 @@ class FacilitySeeder extends Seeder
         }
 
 
-        /*
-        ============================
-        HỘI TRƯỜNG
-        ============================
-        */
+        //Hoi truong
         $hall600 = Category::where('name','Hội trường 600')->firstOrFail();
 
         foreach(['Hội trường 600A','Hội trường 600B'] as $name){
@@ -118,11 +98,7 @@ class FacilitySeeder extends Seeder
         }
 
 
-        /*
-        ============================
-        PHÒNG HỌC
-        ============================
-        */
+        // Phong hoc
         $classroom = Category::where('name','Phòng học')->firstOrFail();
 
         foreach(['Phòng A','Phòng B','Phòng C','Phòng D'] as $block){

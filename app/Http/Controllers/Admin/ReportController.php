@@ -29,7 +29,6 @@ class ReportController extends Controller
     {
         $type = $request->type ?? 'day';
 
-        // 🔥 LOAD RELATION ĐÚNG
         $query = Booking::with([
             'roomBookings.facility.category',
             'sportBookings.facility.category'
@@ -37,7 +36,6 @@ class ReportController extends Controller
         ->where('status', 'approved')
         ->whereNotNull('paid_at');
 
-        // ===== FILTER TIME =====
         if ($type == 'day') {
 
             $date = $request->date ?? Carbon::today()->toDateString();
@@ -57,14 +55,12 @@ class ReportController extends Controller
             $query->whereYear('paid_at', $year);
         }
 
-        // ===== FILTER PAYMENT =====
         if ($request->payment) {
             $query->where('payment_method', $request->payment);
         }
 
         $bookings = $query->get();
 
-        // 🔥 MAP DATA TỪ BẢNG CON
         $bookings = $bookings->map(function ($b) {
 
             $room = $b->roomBookings->first();
@@ -85,7 +81,6 @@ class ReportController extends Controller
             return $b;
         });
 
-        // ===== GROUP =====
         if ($type == 'year') {
             $grouped = $bookings->groupBy(function ($item) {
                 return 'Tháng ' . Carbon::parse($item->paid_at)->format('m');
@@ -93,8 +88,7 @@ class ReportController extends Controller
         } else {
             $grouped = $bookings->groupBy('facility_name');
         }
-
-        // ===== TOTAL =====
+        
         $totalAll = $bookings->sum('price');
 
         $totalCash = $bookings

@@ -25,7 +25,7 @@ class AutoCancelBooking extends Command
         $sport = $booking->sportBookings->first();
         $room = $booking->roomBookings->first();
 
-        // 🔥 XÁC ĐỊNH THỜI GIAN BẮT ĐẦU
+        //  XAC ĐINH THOI GIAN BAT ĐAU
         if ($sport) {
             $start = Carbon::parse($sport->booking_date . ' ' . $sport->start_time);
         } elseif ($room) {
@@ -45,7 +45,7 @@ class AutoCancelBooking extends Command
             continue;
         }
 
-        // ⏱️ QUÁ 1 GIỜ CHƯA CHECK-IN → HỦY
+        // QUA 1 GIO CHUA CHECK-IN → HUY
         if ($start->copy()->addHour()->lessThan($now)) {
 
             $booking->status = 'cancelled';

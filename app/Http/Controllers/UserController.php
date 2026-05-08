@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // 📋 Danh sách + tìm kiếm
+    // Danh sách va tìm kiếm
     public function index(Request $request)
     {
         $query = User::query();
 
-        // 🔍 Tìm kiếm
+        //  Tìm kiếm
         if ($request->keyword) {
             $query->where(function ($q) use ($request) {
                 $q->where('ho_ten', 'like', '%' . $request->keyword . '%')
@@ -21,19 +21,19 @@ class UserController extends Controller
             });
         }
 
-        // 🔥 Sắp xếp mới nhất
+        //  Sắp xếp mới nhất
         $users = $query->latest()->paginate(10);
 
         return view('users.index', compact('users'));
     }
 
-    // ➕ Form thêm
+    //  Form thêm
     public function create()
     {
         return view('users.create');
     }
 
-    // 💾 Lưu
+    //  Lưu
     public function store(Request $request)
     {
         $request->validate([
@@ -58,14 +58,14 @@ class UserController extends Controller
             ->with('success','Thêm người dùng thành công');
     }
 
-    // ✏️ Form sửa
+    //  Form sửa
     public function edit($id)
     {
         $user = User::findOrFail($id);
         return view('users.edit', compact('user'));
     }
 
-    // 🔄 Update
+    // Update
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -82,7 +82,7 @@ class UserController extends Controller
             'vai_tro' => $request->vai_tro
         ];
 
-        // 🔐 Nếu có nhập password thì mới update
+        //  Nếu có nhập password thì mới update
         if ($request->password) {
             $data['password'] = bcrypt($request->password);
         }
@@ -93,7 +93,7 @@ class UserController extends Controller
             ->with('success','Cập nhật thành công');
     }
 
-    // 🗑 Xóa
+    //  Xóa
     public function destroy($id)
     {
         $user = User::findOrFail($id);

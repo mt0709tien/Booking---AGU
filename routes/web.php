@@ -17,11 +17,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Auth\NewPasswordController;
 
-/*
-|--------------------------------------------------------------------------
-| Trang chủ
-|--------------------------------------------------------------------------
-*/
+//TRANGCHU
 Route::get('/', function () {
 
     if (Auth::check() && Auth::user()->vai_tro == 'admin') {
@@ -33,11 +29,7 @@ Route::get('/', function () {
 })->name('booking.home');
 
 
-/*
-|--------------------------------------------------------------------------
-| Auth
-|--------------------------------------------------------------------------
-*/
+//AUTH
 Route::get('/login', [AuthController::class,'showLogin'])->name('login');
 Route::post('/login', [AuthController::class,'login'])->name('login.post');
 
@@ -50,28 +42,16 @@ Route::post('/logout', function () {
 })->name('logout');
 
 
-/*
-|--------------------------------------------------------------------------
-| Trang thông tin
-|--------------------------------------------------------------------------
-*/
+//TRANGTHONGTIN
 Route::view('/gioi-thieu', 'booking.gioithieu')->name('gioithieu');
 
 
-/*
-|--------------------------------------------------------------------------
-| Danh mục
-|--------------------------------------------------------------------------
-*/
+//DANH MUC
 Route::get('/category/{id}', [CategoryController::class,'show'])
     ->name('category.show');
 
 
-/*
-|--------------------------------------------------------------------------
-| Booking
-|--------------------------------------------------------------------------
-*/
+//BOOKING
 Route::get('/booking/{facility}', [BookingController::class,'create'])
     ->name('booking.create');
 
@@ -104,11 +84,7 @@ Route::middleware('auth')->group(function () {
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| Notification
-|--------------------------------------------------------------------------
-*/
+//THONG BAO
 Route::middleware('auth')->get('/notification/read/{id}', function ($id) {
 
     $noti = auth()->user()->notifications->find($id);
@@ -122,11 +98,7 @@ Route::middleware('auth')->get('/notification/read/{id}', function ($id) {
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| Profile (🔥 CHUẨN)
-|--------------------------------------------------------------------------
-*/
+//PROFILE
 Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'index'])
@@ -140,11 +112,7 @@ Route::middleware('auth')->group(function () {
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| ADMIN
-|--------------------------------------------------------------------------
-*/
+//ADMIN
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
     Route::get('/', [AdminController::class,'dashboard'])
@@ -194,11 +162,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| CRUD Users
-|--------------------------------------------------------------------------
-*/
+
+ //CRUD Users
+
 Route::resource('users', UserController::class);
 
 use App\Http\Controllers\InvoiceController;
@@ -283,11 +249,7 @@ Route::get('/lien-he', function () {
 Route::get('/co-so-vat-chat', [FacilityController::class, 'index'])
     ->name('facilities.index');
 
-/*
-|--------------------------------------------------------------------------
-| Login Google
-|--------------------------------------------------------------------------
-*/
+// LOGIN GG
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])
     ->name('google.login');
 

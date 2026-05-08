@@ -6,6 +6,51 @@
 
 <h3 class="mb-4">Quản lý cơ sở vật chất</h3>
 
+{{-- THÔNG BÁO --}}
+
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show shadow-sm">
+
+        {{ session('success') }}
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm">
+
+        {{ session('error') }}
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+
+    </div>
+@endif
+
+@if ($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm">
+
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+
+    </div>
+@endif
+
 <a href="{{ route('facilities.create') }}" class="btn btn-success mb-3">
     Thêm cơ sở
 </a>
