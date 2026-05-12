@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 label: 'Doanh thu',
                 data: {!! json_encode($revenueData ?? []) !!},
                 borderColor: '#6366f1',
-                backgroundColor: gradient,
+                backgroundColor: '#e6e6e9',
                 borderWidth: 3,
                 fill: true,
                 tension: 0.4,
