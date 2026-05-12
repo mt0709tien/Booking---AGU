@@ -2,7 +2,6 @@
 
 @section('content')
 
-{{-- Tùy chỉnh CSS nhẹ nhàng --}}
 <style>
     .booking-table thead th {
         background-color: #f8f9fa;

@@ -11,6 +11,7 @@ use App\Models\SportBooking;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Notifications\BookingNotification;
+use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
@@ -19,539 +20,329 @@ class BookingController extends Controller
         return auth()->check() && strtolower(trim(auth()->user()->vai_tro)) === 'admin';
     }
 
-    
     // Trang hiển thị lịch
-   public function create(Facility $facility)
-{
-    Carbon::setLocale('vi');
+    public function create(Facility $facility)
+    {
+        Carbon::setLocale('vi');
+        $weekDays = [];
 
-    $weekDays = [];
+        for ($i = 0; $i < 7; $i++) {
+            $date = Carbon::today()->addDays($i);
 
-    for ($i = 0; $i < 7; $i++) {
-
-        $date = Carbon::today()->addDays($i);
-
-        $getSlot = function($session) use ($facility, $date) {
-
-            return RoomBooking::where('facility_id', $facility->id)
-                ->whereDate('booking_date', $date)
-                ->where('session', $session)
-
-                // Thêm cancel_requested vào danh sách status bị chặn
-                ->whereHas('booking', function ($q) {
-                    $q->whereIn('status', [
-                        'pending',
-                        'approved',
-                        'locked',
-                        'cancel_requested' // FIX: giữ slot khi đang chờ admin duyệt hủy
-                    ]);
-                })
-
-                ->with('booking')
-                ->latest()
-                ->first();
-        };
-
-        $weekDays[] = [
-            'date'      => $date,
-            'morning'   => $getSlot('morning'),
-            'afternoon' => $getSlot('afternoon'),
-            'evening'   => $getSlot('evening'),
-        ];
-    }
-
-    return view('booking.create', compact('facility', 'weekDays'));
-}
-
-    //FORM MULTIPLE
-
-   public function formMultiple(Request $request)
-{
-    $items = $request->bookings;
-
-    if (!$items) {
-        return back()->with('error', 'Vui lòng chọn ít nhất 1 ca!');
-    }
-
-    // Nếu tất cả item là lock và là admin → bỏ qua form, lock luôn
-    $allLock = collect($items)->every(fn($i) => str_ends_with($i, '|lock'));
-
-    if ($allLock && auth()->check() && strtolower(trim(auth()->user()->vai_tro)) === 'admin') {
-
-        $facilityId = explode('|', $items[0])[0] ?? null;
-
-        $facility = Facility::findOrFail($facilityId);
-
-        // Tạo booking locked trực tiếp
-        $groupId = \Illuminate\Support\Str::uuid();
-
-        \DB::transaction(function () use ($items, $facility, $groupId) {
-
-            $booking = Booking::create([
-                'group_id'       => $groupId,
-                'user_id'        => auth()->id(),
-                'fullname'       => auth()->user()->ho_ten,
-                'phone'          => '---',
-                'price'          => 0,
-                'payment_method' => 'admin_lock',
-                'status'         => 'locked',
-            ]);
-
-            foreach ($items as $item) {
-
-                $parts = explode('|', $item);
-                // sport: facility_id|date|start|end|lock  → 5 phần
-                // room:  facility_id|date|session|lock    → 4 phần
-
-                if (count($parts) === 5) {
-                    // sport
-                    $startTime = strlen($parts[2]) == 5 ? $parts[2] . ':00' : $parts[2];
-                    $endTime   = strlen($parts[3]) == 5 ? $parts[3] . ':00' : $parts[3];
-
-                    SportBooking::create([
-                        'booking_id'   => $booking->id,
-                        'facility_id'  => $parts[0],
-                        'booking_date' => $parts[1],
-                        'start_time'   => $startTime,
-                        'end_time'     => $endTime,
-                    ]);
-
-                } elseif (count($parts) === 4) {
-                    // room
-                    RoomBooking::create([
-                        'booking_id'   => $booking->id,
-                        'facility_id'  => $parts[0],
-                        'booking_date' => $parts[1],
-                        'session'      => $parts[2],
-                    ]);
-                }
-            }
-        });
-
-        return redirect()->route('booking.create', $facilityId)
-            ->with('success', 'Đã khóa sân thành công!');
-    }
-
-    return view('booking.form-multiple', compact('items'));
-}
-
-    
-    // LƯU MULTIPLE
-    public function storeMultiple(Request $request)
-{
-    $request->validate([
-        'fullname'       => 'required|string|max:255',
-        'phone'          => 'required|string|max:20',
-        'payment_method' => 'required',
-        'bookings'       => 'required|array'
-    ]);
-
-    $groupId = Str::uuid();
-
-    return \DB::transaction(function () use ($request, $groupId) {
-
-        $totalPrice  = 0;
-        $validItems  = [];
-        $hasConflict = false;
-
-        // Lấy facility đầu tiên để xác định type khi cần thông báo
-        $firstFacilityId = explode('|', $request->bookings[0])[0] ?? null;
-        $firstFacility   = $firstFacilityId ? Facility::find($firstFacilityId) : null;
-        $facilityType    = $firstFacility?->category?->type ?? 'sport';
-
-        foreach ($request->bookings as $item) {
-
-            $parts = explode('|', $item);
-            if (count($parts) < 3) continue;
-
-            $facility = Facility::find($parts[0]);
-            if (!$facility) continue;
-
-            $category = $facility->category;
-
-            // ── PHÒNG ──────────────────────────────────────────────
-            if ($category->type === 'room') {
-
-                list($facility_id, $date, $session) = $parts;
-                $type = $parts[3] ?? 'book';
-
-                // Chỉ admin mới được lock
-                if ($type === 'lock' && !$this->isAdmin()) {
-                    continue;
-                }
-
-                // FIX: thêm cancel_requested vào danh sách status bị chặn
-                $exists = RoomBooking::where('facility_id', $facility_id)
+            $getSlot = function($session) use ($facility, $date) {
+                return RoomBooking::where('facility_id', $facility->id)
                     ->whereDate('booking_date', $date)
                     ->where('session', $session)
                     ->whereHas('booking', function ($q) {
-                        $q->whereIn('status', [
-                            'pending',
-                            'approved',
-                            'locked',
-                            'cancel_requested' // FIX: slot chờ hủy vẫn chưa trống
-                        ]);
+                        $q->whereIn('status', ['pending', 'approved', 'locked', 'cancel_requested']);
                     })
-                    ->lockForUpdate()
-                    ->exists();
+                    ->with('booking')
+                    ->latest()
+                    ->first();
+            };
 
-                if ($exists) {
-                    $hasConflict = true;
-                    continue;
-                }
+            $weekDays[] = [
+                'date'      => $date,
+                'morning'   => $getSlot('morning'),
+                'afternoon' => $getSlot('afternoon'),
+                'evening'   => $getSlot('evening'),
+            ];
+        }
 
-                $price = match($session) {
-                    'morning'   => $category->price_morning,
-                    'afternoon' => $category->price_afternoon,
-                    default     => $category->price_evening
-                };
+        return view('booking.create', compact('facility', 'weekDays'));
+    }
 
-                $totalPrice += $price;
+    // FORM MULTIPLE - Xử lý chọn nhiều ca
+    public function formMultiple(Request $request)
+    {
+        $items = $request->bookings;
 
-                $validItems[] = [
-                    'type'         => 'room',
-                    'facility_id'  => $facility_id,
-                    'date'         => $date,
-                    'session'      => $session,
-                    'booking_type' => $type,
-                ];
-            }
+        if (!$items) {
+            return back()->with('error', 'Vui lòng chọn ít nhất 1 ca!');
+        }
 
-            // ── SÂN THỂ THAO ───────────────────────────────────────
-            else {
+        // Nếu là admin và chọn khóa sân (lock) -> xử lý nhanh
+        $allLock = collect($items)->every(fn($i) => str_ends_with($i, '|lock'));
 
-                if (count($parts) < 4) continue;
+        if ($allLock && $this->isAdmin()) {
+            $facilityId = explode('|', $items[0])[0] ?? null;
+            $groupId = Str::uuid();
 
-                $facility_id = $parts[0];
-                $date        = $parts[1];
-                $start       = $parts[2];
-                $end         = $parts[3];
-                $type        = $parts[4] ?? 'book';
+            DB::transaction(function () use ($items, $groupId) {
+                $booking = Booking::create([
+                    'group_id'       => $groupId,
+                    'user_id'        => auth()->id(),
+                    'fullname'       => auth()->user()->ho_ten,
+                    'phone'          => '---',
+                    'price'          => 0,
+                    'payment_method' => 'admin_lock',
+                    'status'         => 'locked',
+                ]);
 
-                // Chỉ admin mới được lock
-                if ($type === 'lock' && !$this->isAdmin()) {
-                    continue;
-                }
-
-                $startTime = strlen($start) == 5 ? $start . ':00' : $start;
-                $endTime   = strlen($end)   == 5 ? $end   . ':00' : $end;
-
-                if (strtotime($endTime) <= strtotime($startTime)) continue;
-
-                // Check trùng trong request
-                $isOverlap = false;
-
-                foreach ($validItems as $v) {
-
-                    if ($v['type'] !== 'sport') continue;
-                    if ($v['facility_id'] != $facility_id || $v['date'] != $date) continue;
-
-                    if (
-                        strtotime($startTime) < strtotime($v['end_time']) &&
-                        strtotime($endTime)   > strtotime($v['start_time'])
-                    ) {
-                        $isOverlap = true;
-                        break;
+                foreach ($items as $item) {
+                    $parts = explode('|', $item);
+                    if (count($parts) === 5) { // Sport
+                        SportBooking::create([
+                            'booking_id'   => $booking->id,
+                            'facility_id'  => $parts[0],
+                            'booking_date' => $parts[1],
+                            'start_time'   => strlen($parts[2]) == 5 ? $parts[2] . ':00' : $parts[2],
+                            'end_time'     => strlen($parts[3]) == 5 ? $parts[3] . ':00' : $parts[3],
+                        ]);
+                    } elseif (count($parts) === 4) { // Room
+                        RoomBooking::create([
+                            'booking_id'   => $booking->id,
+                            'facility_id'  => $parts[0],
+                            'booking_date' => $parts[1],
+                            'session'      => $parts[2],
+                        ]);
                     }
                 }
+            });
 
-                if ($isOverlap) {
-                    $hasConflict = true;
-                    continue;
-                }
-
-                // Check trùng DB + lockForUpdate chống race condition
-                $exists = SportBooking::where('facility_id', $facility_id)
-                    ->where('booking_date', $date)
-                    ->whereHas('booking', function ($q) {
-                        $q->whereIn('status', [
-                            'pending',
-                            'approved',
-                            'locked',
-                            'cancel_requested' // nhất quán với room
-                        ]);
-                    })
-                    ->where(function ($q) use ($startTime, $endTime) {
-                        $q->where('start_time', '<', $endTime)
-                          ->where('end_time',   '>', $startTime);
-                    })
-                    ->lockForUpdate()
-                    ->exists();
-
-                if ($exists) {
-                    $hasConflict = true;
-                    continue;
-                }
-
-                // Tính tiền
-                $hours = (strtotime($endTime) - strtotime($startTime)) / 3600;
-                $price = $hours * $category->price_hour;
-
-                $totalPrice += $price;
-
-                $validItems[] = [
-                    'type'         => 'sport',
-                    'facility_id'  => $facility_id,
-                    'date'         => $date,
-                    'start_time'   => $startTime,
-                    'end_time'     => $endTime,
-                    'booking_type' => $type,
-                ];
-            }
+            return redirect()->route('booking.create', $facilityId)->with('success', 'Đã khóa sân thành công!');
         }
 
-        // ── Tất cả bị trùng → thông báo riêng theo loại ──────────
-        if (empty($validItems)) {
+        return view('booking.form-multiple', compact('items'));
+    }
 
-            $errorMsg = $facilityType === 'sport'
-                ? 'Tất cả khung giờ đã bị trùng!'
-                : 'Tất cả ca đã được đặt hoặc chưa được giải phóng!';
-
-            return redirect()->route('booking.create', $firstFacilityId)
-                ->with('error', $errorMsg);
-        }
-
-        // ── Có trùng một phần ─────────────────────────────────────
-        if ($hasConflict) {
-            $partialMsg = $facilityType === 'sport'
-                ? 'Một số khung giờ đã bị trùng và bị bỏ qua!'
-                : 'Một số ca đã được đặt và bị bỏ qua!';
-
-            session()->flash('error', $partialMsg);
-        }
-
-        // ── TẠO BOOKING ───────────────────────────────────────────
-        $allLock       = collect($validItems)->every(fn($i) => ($i['booking_type'] ?? 'book') === 'lock');
-        $bookingStatus = $allLock ? 'locked' : 'pending';
-
-        $booking = Booking::create([
-            'group_id'       => $groupId,
-            'user_id'        => auth()->check() ? auth()->id() : null,
-            'fullname'       => $request->fullname,
-            'phone'          => $request->phone,
-            'price'          => $totalPrice,
-            'payment_method' => $request->payment_method,
-            'status'         => $bookingStatus,
+    // LƯU MULTIPLE - FIX LỖI TRÙNG KHÁC NGÀY
+    public function storeMultiple(Request $request)
+    {
+        $request->validate([
+            'fullname'       => 'required|string|max:255',
+            'phone'          => 'required|string|max:20',
+            'payment_method' => 'required',
+            'bookings'       => 'required|array'
         ]);
 
-        foreach ($validItems as $item) {
+        $groupId = Str::uuid();
 
-            if ($item['type'] === 'room') {
-                RoomBooking::create([
-                    'booking_id'   => $booking->id,
-                    'facility_id'  => $item['facility_id'],
-                    'booking_date' => $item['date'],
-                    'session'      => $item['session'],
-                ]);
+        return DB::transaction(function () use ($request, $groupId) {
+            $totalPrice  = 0;
+            $validItems  = [];
+            $hasConflict = false;
+
+            $firstFacilityId = explode('|', $request->bookings[0])[0] ?? null;
+            $firstFacility   = $firstFacilityId ? Facility::find($firstFacilityId) : null;
+            $facilityType    = $firstFacility?->category?->type ?? 'sport';
+
+            foreach ($request->bookings as $item) {
+                $parts = explode('|', $item);
+                if (count($parts) < 3) continue;
+
+                $facility = Facility::find($parts[0]);
+                if (!$facility) continue;
+                $category = $facility->category;
+
+                // --- XỬ LÝ PHÒNG ---
+                if ($category->type === 'room') {
+                    list($facility_id, $date, $session) = $parts;
+                    $type = $parts[3] ?? 'book';
+
+                    if ($type === 'lock' && !$this->isAdmin()) continue;
+
+                    $exists = RoomBooking::where('facility_id', $facility_id)
+                        ->whereDate('booking_date', $date)
+                        ->where('session', $session)
+                        ->whereHas('booking', function ($q) {
+                            $q->whereIn('status', ['pending', 'approved', 'locked', 'cancel_requested']);
+                        })
+                        ->lockForUpdate()->exists();
+
+                    if ($exists) { $hasConflict = true; continue; }
+
+                    $price = match($session) {
+                        'morning'   => $category->price_morning,
+                        'afternoon' => $category->price_afternoon,
+                        default     => $category->price_evening
+                    };
+
+                    $totalPrice += $price;
+                    $validItems[] = [
+                        'type' => 'room', 'facility_id' => $facility_id, 'date' => $date,
+                        'session' => $session, 'booking_type' => $type,
+                    ];
+                } 
+                // --- XỬ LÝ SÂN THỂ THAO ---
+                else {
+                    if (count($parts) < 4) continue;
+                    $facility_id = $parts[0]; $date = $parts[1];
+                    $start = $parts[2]; $end = $parts[3]; $type = $parts[4] ?? 'book';
+
+                    if ($type === 'lock' && !$this->isAdmin()) continue;
+
+                    $startTime = strlen($start) == 5 ? $start . ':00' : $start;
+                    $endTime   = strlen($end)   == 5 ? $end   . ':00' : $end;
+                    if (strtotime($endTime) <= strtotime($startTime)) continue;
+
+                    // FIX: Kiểm tra trùng trong danh sách đang xử lý (Check thêm điều kiện CÙNG NGÀY)
+                    $isOverlap = false;
+                    foreach ($validItems as $v) {
+                        if ($v['type'] !== 'sport' || $v['facility_id'] != $facility_id || $v['date'] != $date) continue;
+                        
+                        if (strtotime($startTime) < strtotime($v['end_time']) && strtotime($endTime) > strtotime($v['start_time'])) {
+                            $isOverlap = true; break;
+                        }
+                    }
+
+                    if ($isOverlap) { $hasConflict = true; continue; }
+
+                    // Check trùng dưới Database
+                    $exists = SportBooking::where('facility_id', $facility_id)
+                        ->whereDate('booking_date', $date)
+                        ->whereHas('booking', function ($q) {
+                            $q->whereIn('status', ['pending', 'approved', 'locked', 'cancel_requested']);
+                        })
+                        ->where(function ($q) use ($startTime, $endTime) {
+                            $q->where('start_time', '<', $endTime)->where('end_time', '>', $startTime);
+                        })
+                        ->lockForUpdate()->exists();
+
+                    if ($exists) { $hasConflict = true; continue; }
+
+                    $hours = (strtotime($endTime) - strtotime($startTime)) / 3600;
+                    $totalPrice += ($hours * $category->price_hour);
+
+                    $validItems[] = [
+                        'type' => 'sport', 'facility_id' => $facility_id, 'date' => $date,
+                        'start_time' => $startTime, 'end_time' => $endTime, 'booking_type' => $type,
+                    ];
+                }
             }
 
-            if ($item['type'] === 'sport') {
-                SportBooking::create([
-                    'booking_id'   => $booking->id,
-                    'facility_id'  => $item['facility_id'],
-                    'booking_date' => $item['date'],
-                    'start_time'   => $item['start_time'],
-                    'end_time'     => $item['end_time'],
-                ]);
+            if (empty($validItems)) {
+                $errorMsg = $facilityType === 'sport' ? 'Tất cả khung giờ đã bị trùng!' : 'Tất cả ca đã kín!';
+                return redirect()->route('booking.create', $firstFacilityId)->with('error', $errorMsg);
             }
-        }
 
-        // Chỉ gửi notification khi không phải admin lock
-        if (!$allLock) {
-            $admins = User::where('vai_tro', 'admin')->get();
-
-            foreach ($admins as $admin) {
-                $admin->notify(new BookingNotification(
-                    'Đặt sân mới',
-                    "Khách hàng {$booking->fullname} vừa đặt sân.",
-                    route('admin.bookings')
-                ));
+            if ($hasConflict) {
+                session()->flash('error', 'Một số khung giờ bị trùng và đã bị loại bỏ.');
             }
-        }
 
-        // Redirect
-        if (auth()->check()) {
-            if ($allLock) {
-                $facilityId = $validItems[0]['facility_id'] ?? null;
-                return redirect()->route('booking.create', $facilityId)
-                    ->with('success', 'Đã khóa sân thành công!');
+            $allLock = collect($validItems)->every(fn($i) => ($i['booking_type'] ?? 'book') === 'lock');
+            $booking = Booking::create([
+                'group_id'       => $groupId,
+                'user_id'        => auth()->id(),
+                'fullname'       => $request->fullname,
+                'phone'          => $request->phone,
+                'price'          => $totalPrice,
+                'payment_method' => $request->payment_method,
+                'status'         => $allLock ? 'locked' : 'pending',
+            ]);
+
+            foreach ($validItems as $item) {
+                if ($item['type'] === 'room') {
+                    RoomBooking::create([
+                        'booking_id' => $booking->id, 'facility_id' => $item['facility_id'],
+                        'booking_date' => $item['date'], 'session' => $item['session'],
+                    ]);
+                } else {
+                    SportBooking::create([
+                        'booking_id' => $booking->id, 'facility_id' => $item['facility_id'],
+                        'booking_date' => $item['date'], 'start_time' => $item['start_time'], 'end_time' => $item['end_time'],
+                    ]);
+                }
             }
-            return redirect()->route('booking.my')
-                ->with('success', 'Đặt lịch thành công!');
-        }
 
-        return redirect()->route('booking.home')
-            ->with('success', 'Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
-    });
-}
-   // lich cua toi
-    public function myBookings()
-    {
-        $bookings = Booking::where('user_id', auth()->id())
-            ->latest()
-            ->get();
+            if (!$allLock) {
+                $admins = User::where('vai_tro', 'admin')->get();
+                foreach ($admins as $admin) {
+                    $admin->notify(new BookingNotification('Đặt sân mới', "Khách hàng {$booking->fullname} vừa đặt sân.", route('admin.bookings')));
+                }
+            }
 
+            if (auth()->check()) {
+                return $allLock 
+                    ? redirect()->route('booking.create', $firstFacilityId)->with('success', 'Đã khóa sân thành công!')
+                    : redirect()->route('booking.my')->with('success', 'Đặt lịch thành công!');
+            }
+            return redirect()->route('booking.home')->with('success', 'Đặt lịch thành công!');
+        });
+    }
+
+    
+    public function myBookings() {
+        $bookings = Booking::where('user_id', auth()->id())->latest()->get();
         return view('booking.my', compact('bookings'));
     }
 
-    //HUY
-  // User gửi yêu cầu hủy (pending → hủy luôn, approved → chờ admin)
-public function cancel($id)
-{
-    $booking = Booking::findOrFail($id);
+    public function cancel($id) {
+        $booking = Booking::findOrFail($id);
+        if ($booking->user_id != auth()->id()) abort(403);
+        if ($booking->is_checked_in) return back()->with('error', 'Không thể hủy sau khi đã nhận sân.');
 
-    if ($booking->user_id != auth()->id()) {
-        abort(403);
-    }
-
-    if ($booking->is_checked_in) {
-        return back()->with('error', 'Không thể hủy sau khi đã nhận sân.');
-    }
-
-    // pending → hủy luôn không cần admin duyệt
-    if ($booking->status === 'pending') {
-        $booking->status = 'cancelled';
+        if ($booking->status === 'pending') {
+            $booking->status = 'cancelled';
+        } elseif ($booking->status === 'approved') {
+            $booking->status = 'cancel_requested';
+        } else {
+            return back()->with('error', 'Không thể hủy ở trạng thái này.');
+        }
         $booking->save();
-        return back()->with('success', 'Đã hủy thành công!');
+        return back()->with('success', 'Thao tác thành công!');
     }
 
-    // approved → gửi yêu cầu chờ admin
-    if ($booking->status === 'approved') {
-        $booking->status = 'cancel_requested';
-        $booking->save();
-        return back()->with('success', 'Đã gửi yêu cầu hủy, chờ admin xác nhận.');
+    public function approveCancel($id) {
+        $booking = Booking::findOrFail($id);
+        $booking->update(['status' => 'cancelled']);
+        return back()->with('success', 'Đã xác nhận hủy.');
     }
 
-    return back()->with('error', 'Không thể hủy ở trạng thái này.');
-}
+    public function rejectCancel($id) {
+        $booking = Booking::findOrFail($id);
+        $booking->update(['status' => 'approved']);
+        return back()->with('success', 'Đã từ chối hủy.');
+    }
 
-// Admin đồng ý hủy
-public function approveCancel($id)
-{
-    $booking = Booking::findOrFail($id);
-    $booking->status = 'cancelled';
-    $booking->save();
-    return back()->with('success', 'Đã xác nhận hủy booking.');
-}
-
-// Admin từ chối hủy
-public function rejectCancel($id)
-{
-    $booking = Booking::findOrFail($id);
-    $booking->status = 'approved';
-    $booking->save();
-    return back()->with('success', 'Đã từ chối yêu cầu hủy.');
-}
-    //ThanhToan
-    public function togglePayment(Request $request)
-    {
+    public function togglePayment(Request $request) {
         $booking = Booking::findOrFail($request->id);
-
         $booking->is_paid = !$booking->is_paid;
         $booking->paid_at = $booking->is_paid ? now() : null;
-
         $booking->save();
-
         return back();
     }
 
-    public function checkin(Request $request)
-    {
+    public function checkin(Request $request) {
         $booking = Booking::findOrFail($request->id);
-
-        if ($booking->status !== 'approved') {
-            return back()->with('error', 'Chỉ được nhận sân khi đã duyệt!');
-        }
-
-        $booking->is_checked_in = true;
-        $booking->checked_in_at = now();
-        $booking->save();
-
+        if ($booking->status !== 'approved') return back()->with('error', 'Chưa được duyệt!');
+        $booking->update(['is_checked_in' => true, 'checked_in_at' => now()]);
         return back()->with('success', 'Đã nhận sân!');
     }
 
-    public function index(Request $request)
-    {
+    public function index(Request $request) {
         $query = Booking::query();
-
         if ($request->facility) {
-            $query->whereHas('roomBookings.facility', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->facility . '%');
-            })
-            ->orWhereHas('sportBookings.facility', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->facility . '%');
-            });
+            $query->whereHas('roomBookings.facility', fn($q) => $q->where('name', 'like', "%$request->facility%"))
+                  ->orWhereHas('sportBookings.facility', fn($q) => $q->where('name', 'like', "%$request->facility%"));
         }
-
         if ($request->date) {
-            $query->where(function ($q) use ($request) {
-                $q->whereHas('roomBookings', function ($r) use ($request) {
-                    $r->whereDate('booking_date', $request->date);
-                })
-                ->orWhereHas('sportBookings', function ($s) use ($request) {
-                    $s->whereDate('booking_date', $request->date);
-                });
-            });
+            $query->where(fn($q) => 
+                $q->whereHas('roomBookings', fn($r) => $r->whereDate('booking_date', $request->date))
+                  ->orWhereHas('sportBookings', fn($s) => $s->whereDate('booking_date', $request->date))
+            );
         }
-
         $bookings = $query->latest()->get();
-
         return view('admin.booking.index', compact('bookings'));
     }
 
-    public function review($id)
-    {
-        $booking = Booking::findOrFail($id);
-        return view('booking.review', compact('booking'));
-    }
-
-    public function submitReview(Request $request, $id)
-    {
-        $request->validate([
-            'rating' => 'required|min:1|max:5',
-            'comment' => 'nullable|max:500'
-        ]);
-
-        return redirect()->route('booking.my')
-            ->with('success', 'Cảm ơn bạn đã gửi đánh giá.');
-    }
-
-    public function checkSlot(Request $request)
-    {
+    public function checkSlot(Request $request) {
         $exists = SportBooking::where('facility_id', $request->facility_id)
             ->whereDate('booking_date', $request->date)
-            ->whereHas('booking', function ($q) {
-                $q->whereIn('status', ['pending','approved','locked']);
-            })
-            ->where(function ($q) use ($request) {
-                $q->where('start_time', '<', $request->end)
-                  ->where('end_time', '>', $request->start);
-            })
+            ->whereHas('booking', fn($q) => $q->whereIn('status', ['pending','approved','locked','cancel_requested']))
+            ->where(fn($q) => $q->where('start_time', '<', $request->end)->where('end_time', '>', $request->start))
             ->exists();
-
         return response()->json(['conflict' => $exists]);
     }
 
-    public function getBookedSlots(Request $request)
-    {
-        $facilityId = $request->facility_id;
-        $date = $request->date;
-
-        $slots = SportBooking::where('facility_id', $facilityId)
-            ->whereDate('booking_date', $date)
-            ->whereHas('booking', function ($q) {
-                $q->whereIn('status', ['approved', 'locked', 'pending']);
-            })
-            ->get()
-            ->map(function ($s) {
-                return [
-                    'start_time' => substr($s->start_time, 0, 5),
-                    'end_time'   => substr($s->end_time, 0, 5),
-                ];
-            });
-
-        return response()->json([
-            'slots' => $slots
-        ]);
+    public function getBookedSlots(Request $request) {
+        $slots = SportBooking::where('facility_id', $request->facility_id)
+            ->whereDate('booking_date', $request->date)
+            ->whereHas('booking', fn($q) => $q->whereIn('status', ['approved', 'locked', 'pending', 'cancel_requested']))
+            ->get()->map(fn($s) => [
+                'start_time' => substr($s->start_time, 0, 5),
+                'end_time'   => substr($s->end_time, 0, 5),
+            ]);
+        return response()->json(['slots' => $slots]);
     }
 }

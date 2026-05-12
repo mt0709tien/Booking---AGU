@@ -15,7 +15,7 @@
 
 <style>
     :root {
-        --agu-red: #dc3545;
+        --agu-red: #dc3545; 
         --agu-dark: #1e293b;
     }
 

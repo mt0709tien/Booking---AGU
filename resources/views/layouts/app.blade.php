@@ -14,7 +14,7 @@
 
         body{
             margin:0;
-            padding-top:140px; /* 👈 tăng lên để chứa cả 2 navbar */
+            padding-top:140px; 
         }
 
         .navbar-nav{
@@ -26,11 +26,11 @@
         }
 
         .navbar-nav .nav-link:hover{
-            color:#ff4da6;
+            color:     #ff4da6;
         }
 
         .navbar-pink{
-            background-color:#ffd6e7;
+            background-color:  #ffd6e7;
         }
 
     </style>
@@ -362,13 +362,11 @@
 
 <style>
     .footer-agu {
-        /* Đổi sang màu xanh nhạt pastel chuyên nghiệp */
         background-color: #f0f7ff; 
         border-top: 1px solid #dbeafe;
     }
 
     .footer-title {
-        /* Chỉnh tiêu đề các cột to hơn xíu và đậm nét */
         font-size: 0.9rem;
         font-weight: 700;
         text-transform: uppercase;
